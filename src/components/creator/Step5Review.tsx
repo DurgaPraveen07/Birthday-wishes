@@ -191,76 +191,64 @@ export const Step5Review: React.FC<Props> = ({ theme, form, onPrev, onBake, onRe
             </p>
           </div>
 
-          {/* Animated Dancing & Play-Fighting Teddy Bears Stage */}
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-pink-950/60 via-purple-950/80 to-rose-950/60 border border-pink-500/30 flex flex-col items-center space-y-2 shadow-inner relative overflow-hidden">
-            <span className="text-[10px] font-bold text-pink-300 uppercase tracking-widest bg-pink-500/20 px-3 py-1 rounded-full border border-pink-500/30">
-              🧸 Dancing & Play-Fighting Celebration 🥊
+          {/* Animated Single Cute Love Teddy Bear */}
+          <div className="p-5 rounded-2xl bg-gradient-to-r from-pink-950/70 via-purple-950/80 to-rose-950/70 border border-pink-500/30 flex flex-col items-center space-y-3 shadow-inner relative overflow-hidden">
+            <span className="text-[10px] font-bold text-pink-300 uppercase tracking-widest bg-pink-500/20 px-3 py-1 rounded-full border border-pink-500/30 flex items-center gap-1">
+              🧸 Sending You So Much Love 💕
             </span>
 
-            {/* Teddy Arena Stage */}
-            <div className="flex items-center justify-center gap-6 py-2 relative">
-              {/* Dancing Teddy Bear */}
+            {/* Single Teddy Love Bounce Stage */}
+            <div className="relative flex items-center justify-center py-1">
+              {/* Floating Hearts Orbit */}
               <motion.div
                 animate={{
-                  y: [0, -14, 0],
-                  rotate: [-8, 8, -8],
+                  scale: [0.9, 1.2, 0.9],
+                  opacity: [0.7, 1, 0.7],
+                  y: [-3, -8, -3],
                 }}
                 transition={{
                   repeat: Infinity,
-                  duration: 1.2,
+                  duration: 2.0,
                   ease: 'easeInOut',
                 }}
-                className="flex flex-col items-center cursor-pointer group"
+                className="absolute -top-3 flex items-center gap-3 text-pink-400 text-lg"
               >
-                <span className="text-4xl sm:text-5xl filter drop-shadow-lg group-hover:scale-110 transition-transform">
-                  🧸
-                </span>
-                <span className="text-[10px] font-extrabold text-pink-300 mt-1">
-                  Dancer 💃
-                </span>
+                <span>💖</span>
+                <span>✨</span>
+                <span>💕</span>
               </motion.div>
 
-              {/* Sparkle & Heart Collision Effect */}
+              {/* Single Cute Teddy Bear */}
               <motion.div
                 animate={{
-                  scale: [0.8, 1.2, 0.8],
-                  opacity: [0.6, 1, 0.6],
+                  y: [0, -10, 0],
+                  rotate: [-3, 3, -3],
+                  scale: [1, 1.05, 1],
                 }}
                 transition={{
                   repeat: Infinity,
-                  duration: 1.5,
-                }}
-                className="flex flex-col items-center text-xl font-bold text-amber-300"
-              >
-                <span>🥊 ✨ 💖</span>
-                <span className="text-[10px] text-amber-200">High Five!</span>
-              </motion.div>
-
-              {/* Play-Fighting Teddy Bear */}
-              <motion.div
-                animate={{
-                  x: [0, -8, 6, 0],
-                  y: [0, -6, 0],
-                  rotate: [6, -6, 6],
-                }}
-                transition={{
-                  repeat: Infinity,
-                  duration: 1.0,
+                  duration: 2.2,
                   ease: 'easeInOut',
                 }}
-                className="flex flex-col items-center cursor-pointer group"
+                className="flex flex-col items-center cursor-pointer group pt-2"
               >
-                <span className="text-4xl sm:text-5xl filter drop-shadow-lg group-hover:scale-110 transition-transform">
-                  🧸
-                </span>
-                <span className="text-[10px] font-extrabold text-rose-300 mt-1">
-                  Fighter 🥊
+                <div className="relative">
+                  <span className="text-5xl sm:text-6xl filter drop-shadow-xl group-hover:scale-110 transition-transform block">
+                    🧸
+                  </span>
+                  {/* Heart in Teddy's hands */}
+                  <span className="absolute bottom-0 right-0 text-xl animate-pulse">
+                    💝
+                  </span>
+                </div>
+                <span className="text-xs font-extrabold text-pink-300 mt-2">
+                  With Love 💕
                 </span>
               </motion.div>
             </div>
 
-            <p className="text-[11px] text-pink-200 italic font-serif">
-              "Teddy & Bear are celebrating your magic creation!"
+            <p className="text-xs text-pink-200 italic font-serif text-center">
+              "Teddy is celebrating your magic creation with pure love!"
             </p>
           </div>
 

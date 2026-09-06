@@ -6,6 +6,7 @@ import { Scene1Cover } from './scenes/Scene1Cover';
 import { Scene2Intro } from './scenes/Scene2Intro';
 import { Scene3Wishes } from './scenes/Scene3Wishes';
 import { Scene4Photos } from './scenes/Scene4Photos';
+import { ScenePartyBear } from './scenes/ScenePartyBear';
 import { Scene5Letter } from './scenes/Scene5Letter';
 import { Scene6Finale } from './scenes/Scene6Finale';
 import { Loader2, AlertCircle, Volume2, VolumeX } from 'lucide-react';
@@ -126,6 +127,9 @@ export const SurpriseViewer: React.FC<Props> = ({ surpriseId, typeParam }) => {
 
       {/* 4. Photo Memories Scene */}
       <Scene4Photos theme={theme} surprise={surprise} />
+
+      {/* 4.5. Procedural 3D Dancing Teddy Bear Scene */}
+      <ScenePartyBear theme={theme} />
 
       {/* 5. Letter Scene */}
       <Scene5Letter theme={theme} surprise={surprise} />
