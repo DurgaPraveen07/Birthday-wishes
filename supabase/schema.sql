@@ -21,6 +21,8 @@ CREATE TABLE IF NOT EXISTS public.surprises (
 -- Migrations for existing tables if already created
 ALTER TABLE public.surprises ADD COLUMN IF NOT EXISTS type TEXT NOT NULL DEFAULT 'birthday';
 ALTER TABLE public.surprises ADD COLUMN IF NOT EXISTS details JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE public.surprises ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now();
+ALTER TABLE public.surprises ADD COLUMN IF NOT EXISTS photos_deleted BOOLEAN NOT NULL DEFAULT FALSE;
 
 -- Enable RLS
 ALTER TABLE public.surprises ENABLE ROW LEVEL SECURITY;
@@ -58,3 +60,17 @@ CREATE POLICY "Public Read from temp-photos"
 CREATE POLICY "Public Delete from temp-photos"
   ON storage.objects FOR DELETE
   USING (bucket_id = 'temp-photos');
+
+-- 3. Scheduled 2-Hour Expiration & Photo Cleanup Cron Job (Runs every 15-30 minutes)
+-- Optional pg_cron + pg_net trigger pattern to invoke delete-photos Edge Function:
+-- SELECT cron.schedule(
+--   'cleanup-2hour-expired-photos',
+--   '*/15 * * * *',
+--   $$
+--   SELECT net.http_post(
+--     url := 'https://fuxmmcbzhydljvuohkdj.supabase.co/functions/v1/delete-photos',
+--     headers := '{"Content-Type": "application/json"}'::jsonb,
+--     body := '{"mode": "cleanup_expired"}'::jsonb
+--   );
+--   $$
+-- );

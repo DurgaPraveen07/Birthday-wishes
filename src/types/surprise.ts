@@ -6,6 +6,8 @@ export interface PhotoItem {
   previewUrl: string;
   storagePath?: string;
   caption: string;
+  isUploading?: boolean;
+  uploadError?: string;
 }
 
 export interface SurpriseData {

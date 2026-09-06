@@ -20,6 +20,7 @@ export const SurpriseViewer: React.FC<Props> = ({ surpriseId, typeParam }) => {
   const [surprise, setSurprise] = useState<SurpriseData | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [isExpired, setIsExpired] = useState(false);
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -30,7 +31,13 @@ export const SurpriseViewer: React.FC<Props> = ({ surpriseId, typeParam }) => {
         const data = await getSurprise(surpriseId);
         if (isMounted) {
           if (data) {
-            setSurprise(data);
+            const createdAtTime = new Date(data.created_at).getTime();
+            const twoHoursMs = 2 * 60 * 60 * 1000;
+            if (Date.now() - createdAtTime > twoHoursMs) {
+              setIsExpired(true);
+            } else {
+              setSurprise(data);
+            }
           } else {
             setNotFound(true);
           }
@@ -64,6 +71,26 @@ export const SurpriseViewer: React.FC<Props> = ({ surpriseId, typeParam }) => {
         <p className="text-sm font-semibold text-pink-300 animate-pulse">
           Unwrapping magic surprise... ✨
         </p>
+      </div>
+    );
+  }
+
+  if (isExpired) {
+    return (
+      <div className="min-h-screen w-full bg-slate-950 flex flex-col items-center justify-center p-6 text-center space-y-4 text-white">
+        <div className="w-16 h-16 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center text-3xl">
+          <AlertCircle className="w-8 h-8" />
+        </div>
+        <h2 className="text-2xl font-bold font-heading">Surprise Expired ⏳</h2>
+        <p className="text-xs text-slate-300 max-w-sm leading-relaxed">
+          This surprise link has expired ⏳ — surprises are only available for 2 hours after creation.
+        </p>
+        <a
+          href="#/"
+          className="px-6 py-3 rounded-xl bg-pink-500 hover:bg-pink-600 text-white text-xs font-bold shadow-lg transition-all"
+        >
+          Create a Surprise ✨
+        </a>
       </div>
     );
   }

@@ -33,7 +33,21 @@ export const CreatorWizard: React.FC<Props> = ({ type = 'birthday', onGoHome }) 
     letter: '',
   });
 
+  const generateUUID = (): string => {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0;
+      const v = c === 'x' ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  };
+
+  const [draftId, setDraftId] = useState<string>(() => generateUUID());
+
   useEffect(() => {
+    setDraftId(generateUUID());
     setForm({
       type,
       primaryName: '',
@@ -63,14 +77,16 @@ export const CreatorWizard: React.FC<Props> = ({ type = 'birthday', onGoHome }) 
   };
 
   const handleBakeSurprise = async (): Promise<string> => {
-    const surpriseId = `${type}_${Math.random().toString(36).substring(2, 10)}`;
+    const surpriseId = draftId;
 
     const uploadedPhotos: Array<{ storage_path: string; caption: string }> = [];
 
     if (!form.skipPhotos && form.photos.length > 0) {
       for (let i = 0; i < form.photos.length; i++) {
         const p = form.photos[i];
-        if (p.file) {
+        if (p.storagePath) {
+          uploadedPhotos.push({ storage_path: p.storagePath, caption: p.caption });
+        } else if (p.file) {
           const path = await uploadTempPhoto(type, surpriseId, i + 1, p.file);
           uploadedPhotos.push({ storage_path: path, caption: p.caption });
         } else if (p.previewUrl) {
@@ -194,6 +210,7 @@ export const CreatorWizard: React.FC<Props> = ({ type = 'birthday', onGoHome }) 
                 <Step3Photos
                   theme={theme}
                   form={form}
+                  draftId={draftId}
                   onChange={handleUpdate}
                   onNext={handleNext}
                   onPrev={handlePrev}

@@ -1,22 +1,45 @@
 import React, { useRef, useState } from 'react';
-import { Sparkles, Upload, Trash2, ArrowUp, ArrowDown, Image as ImageIcon, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { Sparkles, Upload, Trash2, ArrowUp, ArrowDown, Image as ImageIcon, ArrowLeft, CheckCircle2, Loader2 } from 'lucide-react';
 import { CreatorFormState, PhotoItem } from '../../types/surprise';
 import { ThemeConfig } from '../../config/themes';
+import { uploadTempPhoto } from '../../lib/supabase';
 
 interface Props {
   theme: ThemeConfig;
   form: CreatorFormState;
+  draftId: string;
   onChange: (fields: Partial<CreatorFormState>) => void;
   onNext: () => void;
   onPrev: () => void;
 }
 
-export const Step3Photos: React.FC<Props> = ({ theme, form, onChange, onNext, onPrev }) => {
+export const Step3Photos: React.FC<Props> = ({ theme, form, draftId, onChange, onNext, onPrev }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const photos = form.photos;
   const skipPhotos = form.skipPhotos;
+
+  const startUpload = async (item: PhotoItem, index: number) => {
+    if (!item.file) return;
+    try {
+      const storagePath = await uploadTempPhoto(theme.type, draftId, index + 1, item.file);
+      onChange({
+        photos: form.photos.map((p) =>
+          p.id === item.id ? { ...p, storagePath, isUploading: false, uploadError: undefined } : p
+        ),
+      });
+    } catch (err: any) {
+      console.error('Immediate photo upload error:', err);
+      const errMsg = err?.message || 'Upload failed';
+      setErrorMsg(`Photo "${item.file.name}" failed to upload to cloud.`);
+      onChange({
+        photos: form.photos.map((p) =>
+          p.id === item.id ? { ...p, isUploading: false, uploadError: errMsg } : p
+        ),
+      });
+    }
+  };
 
   const handleFileSelect = (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -27,9 +50,14 @@ export const Step3Photos: React.FC<Props> = ({ theme, form, onChange, onNext, on
 
     for (let i = 0; i < Math.min(files.length, remainingSlots); i++) {
       const file = files[i];
+      const mime = file.type ? file.type.toLowerCase() : '';
+      const ext = file.name.split('.').pop()?.toLowerCase() || '';
+      const isValidImage =
+        mime.startsWith('image/') ||
+        ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif'].includes(ext);
 
-      if (!['image/jpeg', 'image/png', 'image/jpg', 'image/webp'].includes(file.type)) {
-        setErrorMsg('Please upload valid JPG, PNG or WEBP images.');
+      if (!isValidImage) {
+        setErrorMsg('Please upload valid JPG, PNG, WEBP, or photo images.');
         continue;
       }
 
@@ -39,16 +67,27 @@ export const Step3Photos: React.FC<Props> = ({ theme, form, onChange, onNext, on
       }
 
       const previewUrl = URL.createObjectURL(file);
-      newItems.push({
-        id: `photo_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      const photoId = `photo_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      const newItem: PhotoItem = {
+        id: photoId,
         file,
         previewUrl,
         caption: '',
-      });
+        isUploading: true,
+      };
+
+      newItems.push(newItem);
     }
 
     if (newItems.length > 0) {
-      onChange({ photos: [...photos, ...newItems], skipPhotos: false });
+      const updatedPhotos = [...photos, ...newItems];
+      onChange({ photos: updatedPhotos, skipPhotos: false });
+
+      // Trigger background upload for each new photo
+      newItems.forEach((item, idx) => {
+        const actualIndex = photos.length + idx;
+        startUpload(item, actualIndex);
+      });
     }
   };
 
@@ -79,6 +118,8 @@ export const Step3Photos: React.FC<Props> = ({ theme, form, onChange, onNext, on
 
     onChange({ photos: newPhotos });
   };
+
+  const isUploadingAny = photos.some((p) => p.isUploading);
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -119,13 +160,13 @@ export const Step3Photos: React.FC<Props> = ({ theme, form, onChange, onNext, on
           onDragOver={(e) => e.preventDefault()}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
-          className="border-2 border-dashed border-pink-500/40 hover:border-pink-500 bg-pink-500/5 hover:bg-pink-500/10 rounded-2xl p-6 text-center cursor-pointer transition-all space-y-2 group"
+          className="border-2 border-dashed border-pink-500/40 hover:border-pink-500 bg-pink-500/5 hover:bg-pink-500/10 rounded-2xl p-6 text-center cursor-pointer transition-all space-y-2 group touch-manipulation relative z-10"
         >
           <input
             ref={fileInputRef}
             type="file"
             multiple
-            accept="image/jpeg,image/png,image/webp"
+            accept="image/*"
             onChange={(e) => handleFileSelect(e.target.files)}
             className="hidden"
           />
@@ -155,11 +196,18 @@ export const Step3Photos: React.FC<Props> = ({ theme, form, onChange, onNext, on
               key={photo.id}
               className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center gap-3"
             >
-              <img
-                src={photo.previewUrl}
-                alt="Memory preview"
-                className="w-16 h-16 rounded-lg object-cover border border-slate-700 flex-shrink-0"
-              />
+              <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-slate-700 flex-shrink-0">
+                <img
+                  src={photo.previewUrl}
+                  alt="Memory preview"
+                  className="w-full h-full object-cover"
+                />
+                {photo.isUploading && (
+                  <div className="absolute inset-0 bg-slate-950/70 flex items-center justify-center text-pink-400">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  </div>
+                )}
+              </div>
               <div className="flex-1 space-y-1">
                 <input
                   type="text"
@@ -171,6 +219,9 @@ export const Step3Photos: React.FC<Props> = ({ theme, form, onChange, onNext, on
                 />
                 <span className="text-[10px] text-slate-500 block">
                   Photo #{index + 1} • {photo.caption.length}/60 chars
+                  {photo.isUploading && <span className="text-pink-400 font-semibold ml-2">Uploading to cloud... ☁️</span>}
+                  {photo.storagePath && <span className="text-emerald-400 font-semibold ml-2">✓ Uploaded to Supabase</span>}
+                  {photo.uploadError && <span className="text-rose-400 font-semibold ml-2">⚠️ {photo.uploadError}</span>}
                 </span>
               </div>
               <div className="flex flex-col gap-1">
@@ -227,9 +278,17 @@ export const Step3Photos: React.FC<Props> = ({ theme, form, onChange, onNext, on
         <button
           type="button"
           onClick={onNext}
-          className={`flex-1 py-3.5 rounded-xl bg-gradient-to-r ${theme.buttonGradient} text-white font-semibold shadow-lg shadow-pink-500/25 active:scale-[0.99] transition-all flex items-center justify-center gap-2 text-base`}
+          disabled={isUploadingAny}
+          className={`flex-1 py-3.5 rounded-xl bg-gradient-to-r ${theme.buttonGradient} text-white font-semibold shadow-lg shadow-pink-500/25 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 text-base`}
         >
-          <span>Continue to Letter 💌</span>
+          {isUploadingAny ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin text-white" />
+              <span>Uploading Photos...</span>
+            </>
+          ) : (
+            <span>Continue to Letter 💌</span>
+          )}
         </button>
       </div>
     </div>

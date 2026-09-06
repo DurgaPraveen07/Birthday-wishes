@@ -18,6 +18,8 @@ export const Step5Review: React.FC<Props> = ({ theme, form, onPrev, onBake, onRe
   const [generatedId, setGeneratedId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  const [bakeError, setBakeError] = useState<string | null>(null);
+
   const BAKING_STEPS = [
     '🥣 Mixing sweet wishes & memories...',
     '🎈 Inflating celebration balloons...',
@@ -29,6 +31,7 @@ export const Step5Review: React.FC<Props> = ({ theme, form, onPrev, onBake, onRe
   const handleStartBaking = async () => {
     setIsBaking(true);
     setBakingStep(0);
+    setBakeError(null);
 
     const stepInterval = setInterval(() => {
       setBakingStep((prev) => {
@@ -41,8 +44,10 @@ export const Step5Review: React.FC<Props> = ({ theme, form, onPrev, onBake, onRe
       const id = await onBake();
       clearInterval(stepInterval);
       setGeneratedId(id);
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      clearInterval(stepInterval);
+      console.error('Baking error:', e);
+      setBakeError(e?.message || 'Failed to generate surprise link. Please check your connection and try again.');
     } finally {
       setIsBaking(false);
     }
@@ -304,13 +309,27 @@ export const Step5Review: React.FC<Props> = ({ theme, form, onPrev, onBake, onRe
         </div>
       )}
 
+      {/* Bake Error Alert */}
+      {bakeError && !generatedId && (
+        <div className="p-4 rounded-xl bg-rose-950/80 border border-rose-500/50 text-rose-200 text-xs flex items-center justify-between gap-3 shadow-lg animate-fadeIn">
+          <span>⚠️ {bakeError}</span>
+          <button
+            type="button"
+            onClick={() => setBakeError(null)}
+            className="text-rose-400 hover:text-white font-bold px-2 py-1 rounded bg-rose-900/40"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {/* Initial Bake Buttons */}
       {!generatedId && !isBaking && (
-        <div className="flex items-center gap-3 pt-2">
+        <div className="flex items-center gap-3 pt-2 relative z-20">
           <button
             type="button"
             onClick={onPrev}
-            className="px-5 py-3.5 rounded-xl border border-slate-700 text-slate-300 font-semibold hover:bg-slate-800 transition-all flex items-center gap-2 text-sm cursor-pointer"
+            className="px-5 py-3.5 rounded-xl border border-slate-700 text-slate-300 font-semibold hover:bg-slate-800 transition-all flex items-center gap-2 text-sm cursor-pointer touch-manipulation"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Back</span>
@@ -318,7 +337,7 @@ export const Step5Review: React.FC<Props> = ({ theme, form, onPrev, onBake, onRe
           <button
             type="button"
             onClick={handleStartBaking}
-            className={`flex-1 py-4 rounded-xl bg-gradient-to-r ${theme.buttonGradient} text-white font-bold shadow-xl shadow-pink-500/30 hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2 text-base glow-pink cursor-pointer`}
+            className={`flex-1 py-4 rounded-xl bg-gradient-to-r ${theme.buttonGradient} text-white font-bold shadow-xl shadow-pink-500/30 hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2 text-base glow-pink cursor-pointer touch-manipulation relative z-20 pointer-events-auto`}
           >
             <Sparkles className="w-5 h-5" />
             <span>Bake the Magic ✨</span>
