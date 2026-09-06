@@ -46,22 +46,7 @@ export const Scene4Photos: React.FC<Props> = ({ theme, surprise }) => {
   }
 
   if (photoList.length === 0) {
-    return (
-      <div
-        id="scene-4"
-        className={`min-h-screen w-full flex flex-col items-center justify-center p-6 text-center bg-slate-950 snap-start space-y-4`}
-      >
-        <div className="w-16 h-16 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-3xl">
-          ✨
-        </div>
-        <h3 className="text-2xl sm:text-3xl font-bold font-heading text-white">
-          A Trail of Magical Moments
-        </h3>
-        <p className="text-sm text-slate-300 max-w-md italic font-serif">
-          "Every second spent together is a memory worth treasuring forever."
-        </p>
-      </div>
-    );
+    return null;
   }
 
   return (

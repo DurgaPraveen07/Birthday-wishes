@@ -23,6 +23,10 @@ export const Scene5Letter: React.FC<Props> = ({ theme, surprise }) => {
   const primaryName = surprise.first_name || surprise.details?.primaryName || '';
   const senderName = surprise.sender_name || surprise.details?.senderName || 'Someone Special';
 
+  if (!surprise.letter || !surprise.letter.trim()) {
+    return null;
+  }
+
   return (
     <div
       id="scene-5"

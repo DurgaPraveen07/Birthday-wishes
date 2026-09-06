@@ -50,7 +50,13 @@ export const Scene2Intro: React.FC<Props> = ({ theme, surprise }) => {
     >
       <div className="absolute w-96 h-96 bg-purple-600/15 rounded-full blur-3xl animate-pulse-glow" />
 
-      <motion.div style={{ opacity, scale }} className="space-y-6 z-10 max-w-2xl">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        viewport={{ once: false, amount: 0.3 }}
+        transition={{ duration: 0.5 }}
+        className="space-y-6 z-10 max-w-2xl"
+      >
         <div className={`px-4 py-1.5 rounded-full inline-block text-xs font-bold uppercase tracking-widest ${theme.badgeBg}`}>
           ✨ Special Announcement
         </div>

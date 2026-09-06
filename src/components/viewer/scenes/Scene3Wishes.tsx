@@ -41,6 +41,10 @@ export const Scene3Wishes: React.FC<Props> = ({ theme, wishes }) => {
     });
   };
 
+  if (!wishes || wishes.length === 0) {
+    return null;
+  }
+
   const allPopped = poppedState.every(Boolean);
 
   return (
