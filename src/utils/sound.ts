@@ -1,5 +1,5 @@
 // Web Audio API & HTML5 Audio Engine
-// Provides synthesized sound effects (pops, chimes, unwrap) and supports theme-specific MP3 music playback with fallback synthesis.
+// Provides synthesized sound effects (pops, chimes, unwrap) and plays custom MP3 music files per theme with synth fallback.
 
 class SoundEngine {
   private ctx: AudioContext | null = null;
@@ -60,7 +60,6 @@ class SoundEngine {
     osc.start(now);
     osc.stop(now + 0.08);
 
-    // Noise click
     const bufferSize = this.ctx.sampleRate * 0.02;
     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
     const data = buffer.getChannelData(0);
@@ -145,7 +144,7 @@ class SoundEngine {
     noise.stop(now + duration);
   }
 
-  // Toggle Background Music per theme track ('birthday' | '/music/wedding.mp3' | '/music/love.mp3')
+  // Toggle Background Music per theme track
   public toggleMusic(audioTrack: string = 'birthday', onStatusChange?: (playing: boolean) => void) {
     if (this.isMusicPlaying) {
       this.stopMusic();
@@ -161,27 +160,46 @@ class SoundEngine {
   public startMusic(audioTrack: string = 'birthday', onSuccess?: () => void) {
     if (this.isMusicPlaying) return;
 
-    // Check if playing an MP3 file path
-    if (audioTrack.endsWith('.mp3')) {
-      const audio = new Audio(audioTrack);
-      audio.loop = true;
-      audio.volume = 0.6;
+    if (audioTrack && audioTrack !== 'birthday') {
+      // Try relative audio path
+      const candidatePaths = [
+        audioTrack,
+        audioTrack.startsWith('/') ? audioTrack.substring(1) : `/${audioTrack}`,
+        `/music/${audioTrack.replace('/music/', '').replace('/', '')}`,
+      ];
 
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            this.currentAudioElement = audio;
-            this.isMusicPlaying = true;
-            if (onSuccess) onSuccess();
-          })
-          .catch((err) => {
-            console.warn(`Could not play MP3 ${audioTrack}, falling back to synthesized tune`, err);
-            // Fallback to synth song if MP3 not found
-            this.startSynthMusic(audioTrack.includes('love') || audioTrack.includes('wedding') ? 'romantic' : 'birthday');
-            if (onSuccess) onSuccess();
-          });
-      }
+      const tryPlay = (index: number) => {
+        if (index >= candidatePaths.length) {
+          console.warn(`Could not load MP3 from candidates, playing fallback synth tune`);
+          this.startSynthMusic('romantic');
+          if (onSuccess) onSuccess();
+          return;
+        }
+
+        const path = candidatePaths[index];
+        const audio = new Audio(path);
+        audio.loop = true;
+        audio.volume = 0.75;
+
+        audio.onerror = () => {
+          tryPlay(index + 1);
+        };
+
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              this.currentAudioElement = audio;
+              this.isMusicPlaying = true;
+              if (onSuccess) onSuccess();
+            })
+            .catch(() => {
+              tryPlay(index + 1);
+            });
+        }
+      };
+
+      tryPlay(0);
     } else {
       this.startSynthMusic('birthday');
       if (onSuccess) onSuccess();
@@ -193,38 +211,22 @@ class SoundEngine {
     if (!this.ctx) return;
     this.isMusicPlaying = true;
 
-    const melody = style === 'romantic'
-      ? [
-          { note: 440.00, duration: 0.6, delay: 0 },    // A4
-          { note: 554.37, duration: 0.6, delay: 0.7 },   // C#5
-          { note: 659.25, duration: 0.8, delay: 1.4 },   // E5
-          { note: 587.33, duration: 0.6, delay: 2.3 },   // D5
-          { note: 554.37, duration: 0.6, delay: 3.0 },   // C#5
-          { note: 440.00, duration: 1.0, delay: 3.7 },   // A4
+    const melody = [
+      { note: 261.63, duration: 0.35, delay: 0 },
+      { note: 261.63, duration: 0.25, delay: 0.4 },
+      { note: 293.66, duration: 0.6, delay: 0.7 },
+      { note: 261.63, duration: 0.6, delay: 1.45 },
+      { note: 349.23, duration: 0.6, delay: 2.2 },
+      { note: 329.63, duration: 1.0, delay: 2.95 },
+      { note: 261.63, duration: 0.35, delay: 4.2 },
+      { note: 261.63, duration: 0.25, delay: 4.6 },
+      { note: 293.66, duration: 0.6, delay: 4.9 },
+      { note: 261.63, duration: 0.6, delay: 5.65 },
+      { note: 392.00, duration: 0.6, delay: 6.4 },
+      { note: 349.23, duration: 1.0, delay: 7.15 },
+    ];
 
-          { note: 493.88, duration: 0.6, delay: 5.0 },   // B4
-          { note: 587.33, duration: 0.6, delay: 5.7 },   // D5
-          { note: 739.99, duration: 0.8, delay: 6.4 },   // F#5
-          { note: 659.25, duration: 0.6, delay: 7.3 },   // E5
-          { note: 554.37, duration: 1.2, delay: 8.0 },   // C#5
-        ]
-      : [
-          { note: 261.63, duration: 0.35, delay: 0 },    // C4
-          { note: 261.63, duration: 0.25, delay: 0.4 },  // C4
-          { note: 293.66, duration: 0.6, delay: 0.7 },   // D4
-          { note: 261.63, duration: 0.6, delay: 1.45 },  // C4
-          { note: 349.23, duration: 0.6, delay: 2.2 },   // F4
-          { note: 329.63, duration: 1.0, delay: 2.95 },  // E4
-
-          { note: 261.63, duration: 0.35, delay: 4.2 },  // C4
-          { note: 261.63, duration: 0.25, delay: 4.6 },  // C4
-          { note: 293.66, duration: 0.6, delay: 4.9 },   // D4
-          { note: 261.63, duration: 0.6, delay: 5.65 },  // C4
-          { note: 392.00, duration: 0.6, delay: 6.4 },   // G4
-          { note: 349.23, duration: 1.0, delay: 7.15 },  // F4
-        ];
-
-    const totalLoopDuration = style === 'romantic' ? 10.0 : 9.0;
+    const totalLoopDuration = 9.0;
 
     const playLoop = () => {
       if (!this.isMusicPlaying || !this.ctx) return;
