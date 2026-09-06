@@ -13,6 +13,62 @@ interface Props {
   onPrev: () => void;
 }
 
+async function compressImageFile(file: File): Promise<File> {
+  if (file.size <= 1.5 * 1024 * 1024 && ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type.toLowerCase())) {
+    return file;
+  }
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const maxWidth = 1920;
+      const maxHeight = 1920;
+      let width = img.width;
+      let height = img.height;
+
+      if (width > maxWidth || height > maxHeight) {
+        if (width > height) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        } else {
+          width = Math.round((width * maxHeight) / height);
+          height = maxHeight;
+        }
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const compressedName = file.name.replace(/\.[^/.]+$/, '') + '.jpg';
+              const compressedFile = new File([blob], compressedName, { type: 'image/jpeg' });
+              resolve(compressedFile);
+            } else {
+              resolve(file);
+            }
+          },
+          'image/jpeg',
+          0.85
+        );
+      } else {
+        resolve(file);
+      }
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(file);
+    };
+    img.src = url;
+  });
+}
+
 export const Step3Photos: React.FC<Props> = ({ theme, form, draftId, onChange, onNext, onPrev }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -20,24 +76,31 @@ export const Step3Photos: React.FC<Props> = ({ theme, form, draftId, onChange, o
   const photos = form.photos;
   const skipPhotos = form.skipPhotos;
 
+  const photosRef = useRef(photos);
+  photosRef.current = photos;
+
+  const updatePhotosState = (newPhotos: PhotoItem[]) => {
+    photosRef.current = newPhotos;
+    onChange({ photos: newPhotos, skipPhotos: false });
+  };
+
+  const updateSinglePhoto = (id: string, patch: Partial<PhotoItem>) => {
+    const current = photosRef.current;
+    const updated = current.map((p) => (p.id === id ? { ...p, ...patch } : p));
+    updatePhotosState(updated);
+  };
+
   const startUpload = async (item: PhotoItem, index: number) => {
     if (!item.file) return;
     try {
-      const storagePath = await uploadTempPhoto(theme.type, draftId, index + 1, item.file);
-      onChange({
-        photos: form.photos.map((p) =>
-          p.id === item.id ? { ...p, storagePath, isUploading: false, uploadError: undefined } : p
-        ),
-      });
+      const fileToUpload = await compressImageFile(item.file);
+      const storagePath = await uploadTempPhoto(theme.type, draftId, index + 1, fileToUpload);
+      updateSinglePhoto(item.id, { storagePath, isUploading: false, uploadError: undefined });
     } catch (err: any) {
       console.error('Immediate photo upload error:', err);
       const errMsg = err?.message || 'Upload failed';
-      setErrorMsg(`Photo "${item.file.name}" failed to upload to cloud.`);
-      onChange({
-        photos: form.photos.map((p) =>
-          p.id === item.id ? { ...p, isUploading: false, uploadError: errMsg } : p
-        ),
-      });
+      setErrorMsg(`Photo "${item.file.name}" failed to upload.`);
+      updateSinglePhoto(item.id, { isUploading: false, uploadError: errMsg });
     }
   };
 
@@ -61,11 +124,6 @@ export const Step3Photos: React.FC<Props> = ({ theme, form, draftId, onChange, o
         continue;
       }
 
-      if (file.size > 5 * 1024 * 1024) {
-        setErrorMsg('Image size should be under 5MB each.');
-        continue;
-      }
-
       const previewUrl = URL.createObjectURL(file);
       const photoId = `photo_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
       const newItem: PhotoItem = {
@@ -81,7 +139,7 @@ export const Step3Photos: React.FC<Props> = ({ theme, form, draftId, onChange, o
 
     if (newItems.length > 0) {
       const updatedPhotos = [...photos, ...newItems];
-      onChange({ photos: updatedPhotos, skipPhotos: false });
+      updatePhotosState(updatedPhotos);
 
       // Trigger background upload for each new photo
       newItems.forEach((item, idx) => {
@@ -98,17 +156,17 @@ export const Step3Photos: React.FC<Props> = ({ theme, form, draftId, onChange, o
   };
 
   const handleCaptionChange = (id: string, caption: string) => {
-    const updated = photos.map((p) => (p.id === id ? { ...p, caption: caption.slice(0, 60) } : p));
-    onChange({ photos: updated });
+    const updated = photosRef.current.map((p) => (p.id === id ? { ...p, caption: caption.slice(0, 60) } : p));
+    updatePhotosState(updated);
   };
 
   const handleRemovePhoto = (id: string) => {
-    const updated = photos.filter((p) => p.id !== id);
-    onChange({ photos: updated });
+    const updated = photosRef.current.filter((p) => p.id !== id);
+    updatePhotosState(updated);
   };
 
   const handleMovePhoto = (index: number, direction: 'up' | 'down') => {
-    const newPhotos = [...photos];
+    const newPhotos = [...photosRef.current];
     const targetIdx = direction === 'up' ? index - 1 : index + 1;
     if (targetIdx < 0 || targetIdx >= newPhotos.length) return;
 
@@ -116,7 +174,7 @@ export const Step3Photos: React.FC<Props> = ({ theme, form, draftId, onChange, o
     newPhotos[index] = newPhotos[targetIdx];
     newPhotos[targetIdx] = temp;
 
-    onChange({ photos: newPhotos });
+    updatePhotosState(newPhotos);
   };
 
   const isUploadingAny = photos.some((p) => p.isUploading);

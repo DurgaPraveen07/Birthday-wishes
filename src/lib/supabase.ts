@@ -24,9 +24,10 @@ export async function uploadTempPhoto(
     throw new Error('Supabase client is not configured.');
   }
 
+  const contentType = file.type || 'image/jpeg';
   const { data, error } = await supabase.storage
     .from('temp-photos')
-    .upload(path, file, { upsert: true });
+    .upload(path, file, { upsert: true, contentType });
 
   if (error) {
     console.error('Supabase storage upload error:', error);

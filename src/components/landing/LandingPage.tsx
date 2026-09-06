@@ -67,10 +67,11 @@ export const LandingPage: React.FC<Props> = ({ onSelectType }) => {
       </div>
 
       {/* Footer Credit */}
-      <div className="text-center text-xs text-slate-400 z-10 space-y-1">
+      <div className="text-center text-xs text-slate-300 z-10 space-y-1">
         <p className="flex items-center justify-center gap-1">
           Made with <Heart className="w-3.5 h-3.5 text-pink-400 fill-pink-400" /> for magical moments
         </p>
+        <p className="text-xs font-semibold text-pink-300 tracking-wide">Build and developed By Durga Praveen</p>
         <p className="text-[10px] text-slate-500">Interactive Scroll-Driven Celebration Studio ✨</p>
       </div>
     </div>
