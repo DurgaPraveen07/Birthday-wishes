@@ -68,7 +68,7 @@ export const Scene4Photos: React.FC<Props> = ({ theme, surprise }) => {
     <div
       id="scene-4"
       ref={sectionRef}
-      className={`min-h-[140vh] w-full flex flex-col justify-center relative overflow-hidden bg-gradient-to-b ${theme.bgGradient} snap-start py-20`}
+      className={`min-h-screen w-full flex flex-col justify-center relative overflow-hidden bg-gradient-to-b ${theme.bgGradient} snap-start py-12`}
     >
       {/* Top Header */}
       <div className="text-center space-y-2 z-10 px-4">
