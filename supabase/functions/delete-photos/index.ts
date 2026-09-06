@@ -77,11 +77,11 @@ serve(async (req) => {
       );
     }
 
-    // MODE 2 & 3: Cleanup photos for 2-hour expired surprises AND 1-hour abandoned drafts
+    // Scheduled 2-hour expired surprises photo cleanup
     const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
     const { data: expiredSurprises, error: queryError } = await supabase
       .from("surprises")
-      .select("id, photos")
+      .select("id, photos, type")
       .lt("created_at", twoHoursAgo)
       .eq("photos_deleted", false);
 
@@ -92,6 +92,16 @@ serve(async (req) => {
           const paths = item.photos.map((p: any) => p.storage_path).filter(Boolean);
           if (paths.length > 0) {
             await supabase.storage.from("temp-photos").remove(paths);
+          }
+        }
+
+        // Also clean files directly under folder temp-photos/{type}/{id}/
+        const types = ["birthday", "wedding", "love"];
+        for (const t of types) {
+          const { data: files } = await supabase.storage.from("temp-photos").list(`${t}/${item.id}`);
+          if (files && files.length > 0) {
+            const folderPaths = files.map((f) => `${t}/${item.id}/${f.name}`);
+            await supabase.storage.from("temp-photos").remove(folderPaths);
           }
         }
 

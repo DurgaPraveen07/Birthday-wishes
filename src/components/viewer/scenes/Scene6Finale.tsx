@@ -5,7 +5,6 @@ import { Sparkles, CheckCircle } from 'lucide-react';
 import { SurpriseData } from '../../../types/surprise';
 import { ThemeConfig } from '../../../config/themes';
 import { sound } from '../../../utils/sound';
-import { deleteSurprisePhotos } from '../../../lib/supabase';
 
 interface Props {
   theme: ThemeConfig;
@@ -14,7 +13,6 @@ interface Props {
 
 export const Scene6Finale: React.FC<Props> = ({ theme, surprise }) => {
   const [accepted, setAccepted] = useState(false);
-  const [cleanupDone, setCleanupDone] = useState(false);
 
   useEffect(() => {
     const duration = 3.5 * 1000;
@@ -36,7 +34,7 @@ export const Scene6Finale: React.FC<Props> = ({ theme, surprise }) => {
     return () => clearInterval(interval);
   }, []);
 
-  const handleAccept = async () => {
+  const handleAccept = () => {
     setAccepted(true);
     sound.playSparkle();
 
@@ -45,11 +43,6 @@ export const Scene6Finale: React.FC<Props> = ({ theme, surprise }) => {
       spread: 100,
       origin: { y: 0.6 },
     });
-
-    if (!cleanupDone) {
-      setCleanupDone(true);
-      await deleteSurprisePhotos(surprise.id);
-    }
   };
 
   const primaryName = surprise.first_name || surprise.details?.primaryName || '';

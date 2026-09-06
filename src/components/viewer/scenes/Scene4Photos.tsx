@@ -10,8 +10,9 @@ interface Props {
 }
 
 export const Scene4Photos: React.FC<Props> = ({ theme, surprise }) => {
-  const [photoList, setPhotoList] = useState<Array<{ url: string; caption: string }>>([]);
+  const [photoList, setPhotoList] = useState<Array<{ url: string; caption: string; isUnavailable?: boolean }>>([]);
   const [loading, setLoading] = useState(true);
+  const [failedIndices, setFailedIndices] = useState<Record<number, boolean>>({});
 
   const sectionRef = useRef<HTMLDivElement>(null);
 
@@ -49,6 +50,10 @@ export const Scene4Photos: React.FC<Props> = ({ theme, surprise }) => {
     return null;
   }
 
+  const handleImageError = (index: number) => {
+    setFailedIndices((prev) => ({ ...prev, [index]: true }));
+  };
+
   return (
     <div
       id="scene-4"
@@ -74,34 +79,47 @@ export const Scene4Photos: React.FC<Props> = ({ theme, surprise }) => {
           style={{ x: xTransform }}
           className="flex items-center gap-8 w-max py-8 px-8"
         >
-          {photoList.map((photo, index) => (
-            <motion.div
-              key={index}
-              whileHover={{ scale: 1.05, rotate: 0 }}
-              initial={{ rotate: index % 2 === 0 ? -3 : 3 }}
-              className="glass-card p-4 rounded-3xl w-72 sm:w-80 flex-shrink-0 space-y-3 shadow-2xl border-white/20 transform transition-all duration-300 relative group"
-            >
-              <div className="w-4 h-4 rounded-full bg-amber-400/80 border border-amber-200 shadow-md mx-auto -mt-6 mb-2" />
+          {photoList.map((photo, index) => {
+            const isFailed = photo.isUnavailable || failedIndices[index] || !photo.url;
 
-              <div className="w-full h-72 sm:h-80 rounded-2xl overflow-hidden bg-slate-900 relative">
-                <img
-                  src={photo.url}
-                  alt={photo.caption || `Memory ${index + 1}`}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                />
-              </div>
+            return (
+              <motion.div
+                key={index}
+                whileHover={{ scale: 1.05, rotate: 0 }}
+                initial={{ rotate: index % 2 === 0 ? -3 : 3 }}
+                className="glass-card p-4 rounded-3xl w-72 sm:w-80 flex-shrink-0 space-y-3 shadow-2xl border-white/20 transform transition-all duration-300 relative group"
+              >
+                <div className="w-4 h-4 rounded-full bg-amber-400/80 border border-amber-200 shadow-md mx-auto -mt-6 mb-2" />
 
-              {photo.caption ? (
-                <p className="text-center text-sm font-semibold text-white font-serif italic line-clamp-2 px-2">
-                  "{photo.caption}"
-                </p>
-              ) : (
-                <p className="text-center text-xs text-slate-400 font-sans">
-                  Memory #{index + 1}
-                </p>
-              )}
-            </motion.div>
-          ))}
+                <div className="w-full h-72 sm:h-80 rounded-2xl overflow-hidden bg-slate-900/90 relative flex items-center justify-center">
+                  {isFailed ? (
+                    <div className="p-6 text-center space-y-2">
+                      <p className="text-xs font-medium text-pink-300">
+                        This photo is no longer available 🌸
+                      </p>
+                    </div>
+                  ) : (
+                    <img
+                      src={photo.url}
+                      alt={photo.caption || `Memory ${index + 1}`}
+                      onError={() => handleImageError(index)}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                  )}
+                </div>
+
+                {photo.caption ? (
+                  <p className="text-center text-sm font-semibold text-white font-serif italic line-clamp-2 px-2">
+                    "{photo.caption}"
+                  </p>
+                ) : (
+                  <p className="text-center text-xs text-slate-400 font-sans">
+                    Memory #{index + 1}
+                  </p>
+                )}
+              </motion.div>
+            );
+          })}
         </motion.div>
       </div>
 

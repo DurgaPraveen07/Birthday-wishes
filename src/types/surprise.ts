@@ -25,6 +25,7 @@ export interface SurpriseData {
   created_at: string;
   viewed_at: string | null;
   photos_deleted: boolean;
+  view_count: number;
 }
 
 export interface CreatorFormState {

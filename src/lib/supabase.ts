@@ -39,7 +39,7 @@ export async function uploadTempPhoto(
 
 // 2. Save surprise record
 export async function saveSurprise(
-  surprise: Omit<SurpriseData, 'created_at' | 'viewed_at' | 'photos_deleted'>
+  surprise: Omit<SurpriseData, 'created_at' | 'viewed_at' | 'photos_deleted' | 'view_count'>
 ): Promise<SurpriseData> {
   if (!isSupabaseConfigured || !supabase) {
     throw new Error('Supabase client is not configured. Unable to save surprise.');
@@ -99,59 +99,65 @@ export async function getSurprise(id: string): Promise<SurpriseData | null> {
       .eq('id', id);
   }
 
-  // Check 2-hour expiration and trigger photo cleanup if expired & photos not deleted
-  const createdAtTime = new Date(data.created_at).getTime();
-  const twoHoursMs = 2 * 60 * 60 * 1000;
-  if (!data.photos_deleted && Date.now() - createdAtTime > twoHoursMs) {
-    deleteSurprisePhotos(id).catch((err) =>
-      console.error('Expired surprise photo cleanup background error:', err)
-    );
-  }
-
   return data as SurpriseData;
 }
 
-// 4. Resolve photo display URLs (Signed URLs if Supabase, or direct data URL)
+// 4. Increment view count atomically
+export async function incrementSurpriseViewCount(id: string): Promise<void> {
+  if (!isSupabaseConfigured || !supabase) return;
+  try {
+    const { error } = await supabase.rpc('increment_view_count', { surprise_id: id });
+    if (error) {
+      console.error('Error invoking increment_view_count RPC:', error);
+    }
+  } catch (err) {
+    console.error('Exception incrementing view count:', err);
+  }
+}
+
+// 5. Resolve photo display URLs (Signed URLs created at view time, valid for 2h / 7200s)
 export async function getPhotoDisplayUrls(
   photos: Array<{ storage_path: string; caption: string }>
-): Promise<Array<{ url: string; caption: string }>> {
+): Promise<Array<{ url: string; caption: string; isUnavailable?: boolean }>> {
   if (!photos || photos.length === 0) return [];
 
-  const results: Array<{ url: string; caption: string }> = [];
+  const results: Array<{ url: string; caption: string; isUnavailable?: boolean }> = [];
 
   for (const p of photos) {
-    if (p.storage_path.startsWith('data:')) {
-      results.push({ url: p.storage_path, caption: p.caption });
+    if (!p.storage_path || p.storage_path.startsWith('blob:')) {
+      results.push({ url: '', caption: p.caption, isUnavailable: true });
+    } else if (p.storage_path.startsWith('data:')) {
+      results.push({ url: p.storage_path, caption: p.caption, isUnavailable: false });
     } else if (isSupabaseConfigured && supabase) {
-      const { data } = await supabase.storage
+      const { data, error } = await supabase.storage
         .from('temp-photos')
-        .createSignedUrl(p.storage_path, 3600);
+        .createSignedUrl(p.storage_path, 7200);
 
-      results.push({
-        url: data?.signedUrl || p.storage_path,
-        caption: p.caption,
-      });
+      if (error || !data?.signedUrl) {
+        console.warn(`Failed to create signed URL for path "${p.storage_path}":`, error);
+        results.push({ url: '', caption: p.caption, isUnavailable: true });
+      } else {
+        results.push({ url: data.signedUrl, caption: p.caption, isUnavailable: false });
+      }
     } else {
-      results.push({ url: p.storage_path, caption: p.caption });
+      results.push({ url: p.storage_path, caption: p.caption, isUnavailable: false });
     }
   }
 
   return results;
 }
 
-// 5. Cleanup photos after finale/acceptance
+// 6. Cleanup photos function for Edge Function / cron invocations
 export async function deleteSurprisePhotos(surpriseId: string): Promise<boolean> {
   if (!isSupabaseConfigured || !supabase) return false;
 
   try {
-    // Invoke Edge Function
     const { error } = await supabase.functions.invoke('delete-photos', {
       body: { surprise_id: surpriseId },
     });
 
     if (error) {
       console.warn('Edge function invoke error, running client fallback cleanup', error);
-      // Client-side fallback delete using stored photos array or folder listing
       const { data: surprise } = await supabase
         .from('surprises')
         .select('photos, type')
@@ -177,4 +183,5 @@ export async function deleteSurprisePhotos(surpriseId: string): Promise<boolean>
     return false;
   }
 }
+
 

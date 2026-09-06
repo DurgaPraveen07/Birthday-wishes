@@ -15,7 +15,8 @@ CREATE TABLE IF NOT EXISTS public.surprises (
   photos JSONB NOT NULL DEFAULT '[]'::jsonb,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   viewed_at TIMESTAMPTZ DEFAULT NULL,
-  photos_deleted BOOLEAN NOT NULL DEFAULT FALSE
+  photos_deleted BOOLEAN NOT NULL DEFAULT FALSE,
+  view_count INTEGER NOT NULL DEFAULT 0
 );
 
 -- Migrations for existing tables if already created
@@ -23,6 +24,15 @@ ALTER TABLE public.surprises ADD COLUMN IF NOT EXISTS type TEXT NOT NULL DEFAULT
 ALTER TABLE public.surprises ADD COLUMN IF NOT EXISTS details JSONB NOT NULL DEFAULT '{}'::jsonb;
 ALTER TABLE public.surprises ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now();
 ALTER TABLE public.surprises ADD COLUMN IF NOT EXISTS photos_deleted BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE public.surprises ADD COLUMN IF NOT EXISTS view_count INTEGER NOT NULL DEFAULT 0;
+
+-- Atomic increment function for view count
+CREATE OR REPLACE FUNCTION increment_view_count(surprise_id uuid)
+RETURNS void AS $$
+  UPDATE surprises SET view_count = view_count + 1 WHERE id = surprise_id;
+$$ LANGUAGE sql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION increment_view_count(uuid) TO anon, authenticated, service_role;
 
 -- Enable RLS
 ALTER TABLE public.surprises ENABLE ROW LEVEL SECURITY;

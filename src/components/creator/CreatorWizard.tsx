@@ -84,13 +84,15 @@ export const CreatorWizard: React.FC<Props> = ({ type = 'birthday', onGoHome }) 
     if (!form.skipPhotos && form.photos.length > 0) {
       for (let i = 0; i < form.photos.length; i++) {
         const p = form.photos[i];
-        if (p.storagePath) {
+        if (p.storagePath && !p.storagePath.startsWith('blob:')) {
           uploadedPhotos.push({ storage_path: p.storagePath, caption: p.caption });
         } else if (p.file) {
-          const path = await uploadTempPhoto(type, surpriseId, i + 1, p.file);
-          uploadedPhotos.push({ storage_path: path, caption: p.caption });
-        } else if (p.previewUrl) {
-          uploadedPhotos.push({ storage_path: p.previewUrl, caption: p.caption });
+          try {
+            const path = await uploadTempPhoto(type, surpriseId, i + 1, p.file);
+            uploadedPhotos.push({ storage_path: path, caption: p.caption });
+          } catch (uploadErr) {
+            console.error(`Failed to upload photo #${i + 1} during baking:`, uploadErr);
+          }
         }
       }
     }

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { SurpriseData } from '../../types/surprise';
 import { THEMES, SurpriseType } from '../../config/themes';
-import { getSurprise } from '../../lib/supabase';
+import { getSurprise, incrementSurpriseViewCount } from '../../lib/supabase';
 import { Scene1Cover } from './scenes/Scene1Cover';
 import { Scene2Intro } from './scenes/Scene2Intro';
 import { Scene3Wishes } from './scenes/Scene3Wishes';
@@ -21,8 +21,10 @@ export const SurpriseViewer: React.FC<Props> = ({ surpriseId, typeParam }) => {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [isExpired, setIsExpired] = useState(false);
+  const [isLimitReached, setIsLimitReached] = useState(false);
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const incrementedRef = useRef(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -35,7 +37,13 @@ export const SurpriseViewer: React.FC<Props> = ({ surpriseId, typeParam }) => {
             const twoHoursMs = 2 * 60 * 60 * 1000;
             if (Date.now() - createdAtTime > twoHoursMs) {
               setIsExpired(true);
+            } else if ((data.view_count || 0) >= 20) {
+              setIsLimitReached(true);
             } else {
+              if (!incrementedRef.current) {
+                incrementedRef.current = true;
+                incrementSurpriseViewCount(surpriseId);
+              }
               setSurprise(data);
             }
           } else {
@@ -84,6 +92,26 @@ export const SurpriseViewer: React.FC<Props> = ({ surpriseId, typeParam }) => {
         <h2 className="text-2xl font-bold font-heading">Surprise Expired ⏳</h2>
         <p className="text-xs text-slate-300 max-w-sm leading-relaxed">
           This surprise link has expired ⏳ — surprises are only available for 2 hours after creation.
+        </p>
+        <a
+          href="#/"
+          className="px-6 py-3 rounded-xl bg-pink-500 hover:bg-pink-600 text-white text-xs font-bold shadow-lg transition-all"
+        >
+          Create a Surprise ✨
+        </a>
+      </div>
+    );
+  }
+
+  if (isLimitReached) {
+    return (
+      <div className="min-h-screen w-full bg-slate-950 flex flex-col items-center justify-center p-6 text-center space-y-4 text-white">
+        <div className="w-16 h-16 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center text-3xl">
+          <AlertCircle className="w-8 h-8" />
+        </div>
+        <h2 className="text-2xl font-bold font-heading">Limit Reached 💌</h2>
+        <p className="text-xs text-slate-300 max-w-sm leading-relaxed">
+          This surprise has already been opened the maximum number of times 💌
         </p>
         <a
           href="#/"
