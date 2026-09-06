@@ -11,6 +11,7 @@ export interface ThemeConfig {
   cardGlassBg: string;
   badgeBg: string;
   buttonGradient: string;
+  audioTrack: string; // 'birthday' | '/music/wedding.mp3' | '/music/love.mp3'
 
   // Step 1 Copy & Fields
   step1Title: string;
@@ -69,6 +70,7 @@ export const THEMES: Record<SurpriseType, ThemeConfig> = {
     cardGlassBg: 'rgba(30, 27, 46, 0.7)',
     badgeBg: 'bg-pink-500/20 text-pink-300 border-pink-500/30',
     buttonGradient: 'from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600',
+    audioTrack: 'birthday',
 
     step1Title: "Who's the birthday star? 🎂",
     step1Subtitle: "Tell us who we are celebrating so we can tailor the magic!",
@@ -141,6 +143,7 @@ export const THEMES: Record<SurpriseType, ThemeConfig> = {
     cardGlassBg: 'rgba(40, 20, 35, 0.7)',
     badgeBg: 'bg-rose-500/20 text-rose-300 border-rose-500/30',
     buttonGradient: 'from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600',
+    audioTrack: '/music/wedding.mp3',
 
     step1Title: "Who's getting married? 💍",
     step1Subtitle: 'Enter the names of the happy couple to customize their wedding card!',
@@ -207,6 +210,7 @@ export const THEMES: Record<SurpriseType, ThemeConfig> = {
     cardGlassBg: 'rgba(45, 15, 30, 0.75)',
     badgeBg: 'bg-rose-500/20 text-rose-200 border-rose-500/30',
     buttonGradient: 'from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700',
+    audioTrack: '/music/love.mp3',
 
     step1Title: "Who is this love letter for? 💕",
     step1Subtitle: 'Create a sweet surprise to remind them how much they mean to you!',

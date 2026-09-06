@@ -1,5 +1,5 @@
-// Web Audio API Sound Synthesizer & Audio Engine
-// Provides zero-external-dependency sound effects for balloon pops, envelope chimes, unwrap sounds, and festive ambient music.
+// Web Audio API & HTML5 Audio Engine
+// Provides synthesized sound effects (pops, chimes, unwrap) and supports theme-specific MP3 music playback with fallback synthesis.
 
 class SoundEngine {
   private ctx: AudioContext | null = null;
@@ -7,6 +7,7 @@ class SoundEngine {
   private musicInterval: any = null;
   private isMusicPlaying: boolean = false;
   private activeOscillators: OscillatorNode[] = [];
+  private currentAudioElement: HTMLAudioElement | null = null;
 
   private initCtx() {
     if (!this.ctx) {
@@ -36,7 +37,7 @@ class SoundEngine {
     return this.isMuted;
   }
 
-  // Cute balloon pop sound
+  // Pop sound
   public playPop() {
     if (this.isMuted) return;
     this.initCtx();
@@ -80,7 +81,7 @@ class SoundEngine {
     noise.stop(now + 0.02);
   }
 
-  // Sparkle chime sound for envelope / reveals
+  // Sparkle chime sound
   public playSparkle() {
     if (this.isMuted) return;
     this.initCtx();
@@ -108,7 +109,7 @@ class SoundEngine {
     });
   }
 
-  // Paper tear / unwrap sound
+  // Paper tear sound
   public playUnwrap() {
     if (this.isMuted) return;
     this.initCtx();
@@ -144,58 +145,86 @@ class SoundEngine {
     noise.stop(now + duration);
   }
 
-  // Toggle Background Music
-  public toggleMusic(onStatusChange?: (playing: boolean) => void) {
+  // Toggle Background Music per theme track ('birthday' | '/music/wedding.mp3' | '/music/love.mp3')
+  public toggleMusic(audioTrack: string = 'birthday', onStatusChange?: (playing: boolean) => void) {
     if (this.isMusicPlaying) {
       this.stopMusic();
       if (onStatusChange) onStatusChange(false);
     } else {
       this.isMuted = false;
-      this.startMusic();
-      if (onStatusChange) onStatusChange(true);
+      this.startMusic(audioTrack, () => {
+        if (onStatusChange) onStatusChange(true);
+      });
     }
   }
 
-  public startMusic() {
+  public startMusic(audioTrack: string = 'birthday', onSuccess?: () => void) {
     if (this.isMusicPlaying) return;
+
+    // Check if playing an MP3 file path
+    if (audioTrack.endsWith('.mp3')) {
+      const audio = new Audio(audioTrack);
+      audio.loop = true;
+      audio.volume = 0.6;
+
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            this.currentAudioElement = audio;
+            this.isMusicPlaying = true;
+            if (onSuccess) onSuccess();
+          })
+          .catch((err) => {
+            console.warn(`Could not play MP3 ${audioTrack}, falling back to synthesized tune`, err);
+            // Fallback to synth song if MP3 not found
+            this.startSynthMusic(audioTrack.includes('love') || audioTrack.includes('wedding') ? 'romantic' : 'birthday');
+            if (onSuccess) onSuccess();
+          });
+      }
+    } else {
+      this.startSynthMusic('birthday');
+      if (onSuccess) onSuccess();
+    }
+  }
+
+  private startSynthMusic(style: 'birthday' | 'romantic' = 'birthday') {
     this.initCtx();
     if (!this.ctx) return;
-
     this.isMusicPlaying = true;
 
-    // Happy Birthday melody in C major
-    const melody = [
-      { note: 261.63, duration: 0.35, delay: 0 },    // C4
-      { note: 261.63, duration: 0.25, delay: 0.4 },  // C4
-      { note: 293.66, duration: 0.6, delay: 0.7 },   // D4
-      { note: 261.63, duration: 0.6, delay: 1.45 },  // C4
-      { note: 349.23, duration: 0.6, delay: 2.2 },   // F4
-      { note: 329.63, duration: 1.0, delay: 2.95 },  // E4
+    const melody = style === 'romantic'
+      ? [
+          { note: 440.00, duration: 0.6, delay: 0 },    // A4
+          { note: 554.37, duration: 0.6, delay: 0.7 },   // C#5
+          { note: 659.25, duration: 0.8, delay: 1.4 },   // E5
+          { note: 587.33, duration: 0.6, delay: 2.3 },   // D5
+          { note: 554.37, duration: 0.6, delay: 3.0 },   // C#5
+          { note: 440.00, duration: 1.0, delay: 3.7 },   // A4
 
-      { note: 261.63, duration: 0.35, delay: 4.2 },  // C4
-      { note: 261.63, duration: 0.25, delay: 4.6 },  // C4
-      { note: 293.66, duration: 0.6, delay: 4.9 },   // D4
-      { note: 261.63, duration: 0.6, delay: 5.65 },  // C4
-      { note: 392.00, duration: 0.6, delay: 6.4 },   // G4
-      { note: 349.23, duration: 1.0, delay: 7.15 },  // F4
+          { note: 493.88, duration: 0.6, delay: 5.0 },   // B4
+          { note: 587.33, duration: 0.6, delay: 5.7 },   // D5
+          { note: 739.99, duration: 0.8, delay: 6.4 },   // F#5
+          { note: 659.25, duration: 0.6, delay: 7.3 },   // E5
+          { note: 554.37, duration: 1.2, delay: 8.0 },   // C#5
+        ]
+      : [
+          { note: 261.63, duration: 0.35, delay: 0 },    // C4
+          { note: 261.63, duration: 0.25, delay: 0.4 },  // C4
+          { note: 293.66, duration: 0.6, delay: 0.7 },   // D4
+          { note: 261.63, duration: 0.6, delay: 1.45 },  // C4
+          { note: 349.23, duration: 0.6, delay: 2.2 },   // F4
+          { note: 329.63, duration: 1.0, delay: 2.95 },  // E4
 
-      { note: 261.63, duration: 0.35, delay: 8.4 },  // C4
-      { note: 261.63, duration: 0.25, delay: 8.8 },  // C4
-      { note: 523.25, duration: 0.6, delay: 9.1 },   // C5
-      { note: 440.00, duration: 0.6, delay: 9.85 },  // A4
-      { note: 349.23, duration: 0.6, delay: 10.6 },  // F4
-      { note: 329.63, duration: 0.6, delay: 11.35 }, // E4
-      { note: 293.66, duration: 0.8, delay: 12.1 },  // D4
+          { note: 261.63, duration: 0.35, delay: 4.2 },  // C4
+          { note: 261.63, duration: 0.25, delay: 4.6 },  // C4
+          { note: 293.66, duration: 0.6, delay: 4.9 },   // D4
+          { note: 261.63, duration: 0.6, delay: 5.65 },  // C4
+          { note: 392.00, duration: 0.6, delay: 6.4 },   // G4
+          { note: 349.23, duration: 1.0, delay: 7.15 },  // F4
+        ];
 
-      { note: 466.16, duration: 0.35, delay: 13.2 }, // Bb4
-      { note: 466.16, duration: 0.25, delay: 13.6 }, // Bb4
-      { note: 440.00, duration: 0.6, delay: 13.9 },  // A4
-      { note: 349.23, duration: 0.6, delay: 14.65 }, // F4
-      { note: 392.00, duration: 0.6, delay: 15.4 },  // G4
-      { note: 349.23, duration: 1.2, delay: 16.15 }, // F4
-    ];
-
-    const totalLoopDuration = 18.0;
+    const totalLoopDuration = style === 'romantic' ? 10.0 : 9.0;
 
     const playLoop = () => {
       if (!this.isMusicPlaying || !this.ctx) return;
@@ -232,11 +261,17 @@ class SoundEngine {
 
   public stopMusic() {
     this.isMusicPlaying = false;
+    if (this.currentAudioElement) {
+      try {
+        this.currentAudioElement.pause();
+        this.currentAudioElement.currentTime = 0;
+      } catch (e) {}
+      this.currentAudioElement = null;
+    }
     if (this.musicInterval) {
       clearInterval(this.musicInterval);
       this.musicInterval = null;
     }
-    // Stop all active oscillators immediately
     this.activeOscillators.forEach((osc) => {
       try {
         osc.stop();

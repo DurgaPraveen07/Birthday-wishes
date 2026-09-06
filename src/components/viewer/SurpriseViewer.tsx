@@ -48,8 +48,11 @@ export const SurpriseViewer: React.FC<Props> = ({ surpriseId, typeParam }) => {
     };
   }, [surpriseId]);
 
+  const effectiveType: SurpriseType = surprise?.type || typeParam || 'birthday';
+  const theme = THEMES[effectiveType] || THEMES.birthday;
+
   const handleToggleMusic = () => {
-    sound.toggleMusic((playing) => setIsMusicPlaying(playing));
+    sound.toggleMusic(theme.audioTrack, (playing) => setIsMusicPlaying(playing));
   };
 
   if (loading) {
@@ -85,21 +88,18 @@ export const SurpriseViewer: React.FC<Props> = ({ surpriseId, typeParam }) => {
     );
   }
 
-  const effectiveType: SurpriseType = surprise.type || typeParam || 'birthday';
-  const theme = THEMES[effectiveType] || THEMES.birthday;
-
   return (
     <div
       ref={containerRef}
       className={`h-screen w-full overflow-y-auto overflow-x-hidden snap-y snap-mandatory scroll-smooth bg-slate-950 relative`}
     >
-      {/* Global Floating Festive Music Button */}
+      {/* Global Floating Music Button */}
       <div className="fixed top-6 right-6 z-50">
         <button
           type="button"
           onClick={handleToggleMusic}
           className="p-3 rounded-full bg-slate-900/90 hover:bg-slate-800 text-pink-300 border border-pink-500/40 backdrop-blur-md shadow-2xl transition-all flex items-center justify-center gap-2 glow-pink cursor-pointer active:scale-95"
-          title="Toggle Festive Music"
+          title="Toggle Music"
         >
           {isMusicPlaying ? (
             <>

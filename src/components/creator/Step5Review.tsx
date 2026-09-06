@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Sparkles, Copy, Check, Share2, Eye, ArrowLeft, Loader2 } from 'lucide-react';
 import { CreatorFormState } from '../../types/surprise';
 import { ThemeConfig } from '../../config/themes';
@@ -190,6 +191,79 @@ export const Step5Review: React.FC<Props> = ({ theme, form, onPrev, onBake, onRe
             </p>
           </div>
 
+          {/* Animated Dancing & Play-Fighting Teddy Bears Stage */}
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-pink-950/60 via-purple-950/80 to-rose-950/60 border border-pink-500/30 flex flex-col items-center space-y-2 shadow-inner relative overflow-hidden">
+            <span className="text-[10px] font-bold text-pink-300 uppercase tracking-widest bg-pink-500/20 px-3 py-1 rounded-full border border-pink-500/30">
+              🧸 Dancing & Play-Fighting Celebration 🥊
+            </span>
+
+            {/* Teddy Arena Stage */}
+            <div className="flex items-center justify-center gap-6 py-2 relative">
+              {/* Dancing Teddy Bear */}
+              <motion.div
+                animate={{
+                  y: [0, -14, 0],
+                  rotate: [-8, 8, -8],
+                }}
+                transition={{
+                  repeat: Infinity,
+                  duration: 1.2,
+                  ease: 'easeInOut',
+                }}
+                className="flex flex-col items-center cursor-pointer group"
+              >
+                <span className="text-4xl sm:text-5xl filter drop-shadow-lg group-hover:scale-110 transition-transform">
+                  🧸
+                </span>
+                <span className="text-[10px] font-extrabold text-pink-300 mt-1">
+                  Dancer 💃
+                </span>
+              </motion.div>
+
+              {/* Sparkle & Heart Collision Effect */}
+              <motion.div
+                animate={{
+                  scale: [0.8, 1.2, 0.8],
+                  opacity: [0.6, 1, 0.6],
+                }}
+                transition={{
+                  repeat: Infinity,
+                  duration: 1.5,
+                }}
+                className="flex flex-col items-center text-xl font-bold text-amber-300"
+              >
+                <span>🥊 ✨ 💖</span>
+                <span className="text-[10px] text-amber-200">High Five!</span>
+              </motion.div>
+
+              {/* Play-Fighting Teddy Bear */}
+              <motion.div
+                animate={{
+                  x: [0, -8, 6, 0],
+                  y: [0, -6, 0],
+                  rotate: [6, -6, 6],
+                }}
+                transition={{
+                  repeat: Infinity,
+                  duration: 1.0,
+                  ease: 'easeInOut',
+                }}
+                className="flex flex-col items-center cursor-pointer group"
+              >
+                <span className="text-4xl sm:text-5xl filter drop-shadow-lg group-hover:scale-110 transition-transform">
+                  🧸
+                </span>
+                <span className="text-[10px] font-extrabold text-rose-300 mt-1">
+                  Fighter 🥊
+                </span>
+              </motion.div>
+            </div>
+
+            <p className="text-[11px] text-pink-200 italic font-serif">
+              "Teddy & Bear are celebrating your magic creation!"
+            </p>
+          </div>
+
           {/* Link Display Box */}
           <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center gap-2">
             <input
@@ -201,7 +275,7 @@ export const Step5Review: React.FC<Props> = ({ theme, form, onPrev, onBake, onRe
             <button
               type="button"
               onClick={handleCopyLink}
-              className="px-3 py-2 rounded-lg bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 border border-pink-500/30 text-xs font-semibold flex items-center gap-1.5 transition-all"
+              className="px-3 py-2 rounded-lg bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 border border-pink-500/30 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
             >
               {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
               <span>{copied ? 'Copied!' : 'Copy'}</span>
@@ -213,7 +287,7 @@ export const Step5Review: React.FC<Props> = ({ theme, form, onPrev, onBake, onRe
             <button
               type="button"
               onClick={handleWhatsAppShare}
-              className="py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-lg transition-all"
+              className="py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer"
             >
               <Share2 className="w-4 h-4" />
               <span>Share on WhatsApp</span>
@@ -234,7 +308,7 @@ export const Step5Review: React.FC<Props> = ({ theme, form, onPrev, onBake, onRe
             <button
               type="button"
               onClick={onReset}
-              className="text-xs text-slate-400 hover:text-white underline"
+              className="text-xs text-slate-400 hover:text-white underline cursor-pointer"
             >
               Create another surprise ✨
             </button>
@@ -248,7 +322,7 @@ export const Step5Review: React.FC<Props> = ({ theme, form, onPrev, onBake, onRe
           <button
             type="button"
             onClick={onPrev}
-            className="px-5 py-3.5 rounded-xl border border-slate-700 text-slate-300 font-semibold hover:bg-slate-800 transition-all flex items-center gap-2 text-sm"
+            className="px-5 py-3.5 rounded-xl border border-slate-700 text-slate-300 font-semibold hover:bg-slate-800 transition-all flex items-center gap-2 text-sm cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Back</span>
@@ -256,7 +330,7 @@ export const Step5Review: React.FC<Props> = ({ theme, form, onPrev, onBake, onRe
           <button
             type="button"
             onClick={handleStartBaking}
-            className={`flex-1 py-4 rounded-xl bg-gradient-to-r ${theme.buttonGradient} text-white font-bold shadow-xl shadow-pink-500/30 hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2 text-base glow-pink`}
+            className={`flex-1 py-4 rounded-xl bg-gradient-to-r ${theme.buttonGradient} text-white font-bold shadow-xl shadow-pink-500/30 hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2 text-base glow-pink cursor-pointer`}
           >
             <Sparkles className="w-5 h-5" />
             <span>Bake the Magic ✨</span>
