@@ -1,0 +1,237 @@
+import React, { useRef, useState } from 'react';
+import { Sparkles, Upload, Trash2, ArrowUp, ArrowDown, Image as ImageIcon, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { CreatorFormState, PhotoItem } from '../../types/surprise';
+
+interface Props {
+  form: CreatorFormState;
+  onChange: (fields: Partial<CreatorFormState>) => void;
+  onNext: () => void;
+  onPrev: () => void;
+}
+
+export const Step3Photos: React.FC<Props> = ({ form, onChange, onNext, onPrev }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const photos = form.photos;
+  const skipPhotos = form.skipPhotos;
+
+  const handleFileSelect = (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setErrorMsg(null);
+
+    const newItems: PhotoItem[] = [];
+    const remainingSlots = 5 - photos.length;
+
+    for (let i = 0; i < Math.min(files.length, remainingSlots); i++) {
+      const file = files[i];
+
+      if (!['image/jpeg', 'image/png', 'image/jpg', 'image/webp'].includes(file.type)) {
+        setErrorMsg('Please upload valid JPG or PNG images.');
+        continue;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        setErrorMsg('Image size should be under 5MB each.');
+        continue;
+      }
+
+      const previewUrl = URL.createObjectURL(file);
+      newItems.push({
+        id: `photo_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        file,
+        previewUrl,
+        caption: '',
+      });
+    }
+
+    if (newItems.length > 0) {
+      onChange({ photos: [...photos, ...newItems], skipPhotos: false });
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleFileSelect(e.dataTransfer.files);
+  };
+
+  const handleCaptionChange = (id: string, caption: string) => {
+    const updated = photos.map((p) => (p.id === id ? { ...p, caption: caption.slice(0, 60) } : p));
+    onChange({ photos: updated });
+  };
+
+  const handleRemovePhoto = (id: string) => {
+    const updated = photos.filter((p) => p.id !== id);
+    onChange({ photos: updated });
+  };
+
+  const handleMovePhoto = (index: number, direction: 'up' | 'down') => {
+    const newPhotos = [...photos];
+    const targetIdx = direction === 'up' ? index - 1 : index + 1;
+    if (targetIdx < 0 || targetIdx >= newPhotos.length) return;
+
+    const temp = newPhotos[index];
+    newPhotos[index] = newPhotos[targetIdx];
+    newPhotos[targetIdx] = temp;
+
+    onChange({ photos: newPhotos });
+  };
+
+  return (
+    <div className="space-y-6 animate-fadeIn">
+      <div className="text-center space-y-2">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-semibold uppercase tracking-wider border border-amber-500/30">
+          <Sparkles className="w-3.5 h-3.5" /> Step 3 of 5
+        </div>
+        <h2 className="text-2xl sm:text-3xl font-bold font-heading text-white">
+          Photo Memories 📸
+        </h2>
+        <p className="text-sm text-slate-300">
+          Upload up to 5 favourite pictures. They'll drift across the screen like a glowing film strip!
+        </p>
+      </div>
+
+      {/* Skip Toggle */}
+      <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-900/60 border border-slate-800">
+        <div className="flex items-center gap-2.5">
+          <ImageIcon className="w-4 h-4 text-pink-400" />
+          <span className="text-xs font-medium text-slate-200">
+            {photos.length > 0 ? `${photos.length}/5 photos added` : 'No photos added yet'}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={() => onChange({ skipPhotos: !skipPhotos })}
+          className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all ${
+            skipPhotos
+              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+              : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
+          }`}
+        >
+          {skipPhotos ? '✓ Photo Step Skipped' : 'Skip Photos for Now'}
+        </button>
+      </div>
+
+      {/* Upload Zone */}
+      {!skipPhotos && photos.length < 5 && (
+        <div
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={handleDrop}
+          onClick={() => fileInputRef.current?.click()}
+          className="border-2 border-dashed border-pink-500/40 hover:border-pink-500 bg-pink-500/5 hover:bg-pink-500/10 rounded-2xl p-6 text-center cursor-pointer transition-all space-y-2 group"
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="image/jpeg,image/png,image/webp"
+            onChange={(e) => handleFileSelect(e.target.files)}
+            className="hidden"
+          />
+          <div className="w-12 h-12 rounded-full bg-pink-500/20 flex items-center justify-center mx-auto text-pink-300 group-hover:scale-110 transition-transform">
+            <Upload className="w-6 h-6" />
+          </div>
+          <p className="text-sm font-semibold text-white">
+            Tap or Drag & Drop photos here
+          </p>
+          <p className="text-xs text-slate-400">
+            JPG, PNG or WEBP (Max 5MB each • Up to {5 - photos.length} more)
+          </p>
+        </div>
+      )}
+
+      {errorMsg && (
+        <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-500/30 text-xs text-rose-300 text-center">
+          {errorMsg}
+        </div>
+      )}
+
+      {/* Uploaded Photos List */}
+      {!skipPhotos && photos.length > 0 && (
+        <div className="space-y-3">
+          {photos.map((photo, index) => (
+            <div
+              key={photo.id}
+              className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center gap-3"
+            >
+              <img
+                src={photo.previewUrl}
+                alt="Memory preview"
+                className="w-16 h-16 rounded-lg object-cover border border-slate-700 flex-shrink-0"
+              />
+              <div className="flex-1 space-y-1">
+                <input
+                  type="text"
+                  maxLength={60}
+                  placeholder="Add a sweet caption (e.g. Summer '23 ✨)"
+                  value={photo.caption}
+                  onChange={(e) => handleCaptionChange(photo.id, e.target.value)}
+                  className="w-full bg-slate-950/80 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-pink-500"
+                />
+                <span className="text-[10px] text-slate-500 block">
+                  Photo #{index + 1} • {photo.caption.length}/60 chars
+                </span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <button
+                  type="button"
+                  onClick={() => handleMovePhoto(index, 'up')}
+                  disabled={index === 0}
+                  className="p-1 text-slate-400 hover:text-white disabled:opacity-30"
+                  title="Move Up"
+                >
+                  <ArrowUp className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleMovePhoto(index, 'down')}
+                  disabled={index === photos.length - 1}
+                  className="p-1 text-slate-400 hover:text-white disabled:opacity-30"
+                  title="Move Down"
+                >
+                  <ArrowDown className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleRemovePhoto(photo.id)}
+                  className="p-1 text-rose-400 hover:text-rose-300"
+                  title="Delete Photo"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Temporary Notice */}
+      <div className="p-3 rounded-xl bg-slate-900/40 border border-slate-800/80 flex items-start gap-2.5">
+        <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+        <p className="text-[11px] text-slate-400 leading-relaxed">
+          <strong className="text-slate-300">Privacy First:</strong> Photos are temporarily stored in Supabase storage for the recipient to view, and automatically deleted after they finish the birthday experience!
+        </p>
+      </div>
+
+      {/* Navigation Controls */}
+      <div className="flex items-center gap-3 pt-2">
+        <button
+          type="button"
+          onClick={onPrev}
+          className="px-5 py-3.5 rounded-xl border border-slate-700 text-slate-300 font-semibold hover:bg-slate-800 transition-all flex items-center gap-2"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back</span>
+        </button>
+        <button
+          type="button"
+          onClick={onNext}
+          className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold shadow-lg shadow-pink-500/25 hover:from-pink-600 hover:to-rose-600 active:scale-[0.99] transition-all flex items-center justify-center gap-2 text-base"
+        >
+          <span>Continue to Letter 💌</span>
+        </button>
+      </div>
+    </div>
+  );
+};
