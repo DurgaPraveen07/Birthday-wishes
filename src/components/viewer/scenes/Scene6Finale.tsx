@@ -1,20 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { Sparkles, Heart, CheckCircle } from 'lucide-react';
+import { Sparkles, CheckCircle } from 'lucide-react';
 import { SurpriseData } from '../../../types/surprise';
+import { ThemeConfig } from '../../../config/themes';
 import { sound } from '../../../utils/sound';
 import { deleteSurprisePhotos } from '../../../lib/supabase';
 
 interface Props {
+  theme: ThemeConfig;
   surprise: SurpriseData;
 }
 
-export const Scene6Finale: React.FC<Props> = ({ surprise }) => {
+export const Scene6Finale: React.FC<Props> = ({ theme, surprise }) => {
   const [accepted, setAccepted] = useState(false);
   const [cleanupDone, setCleanupDone] = useState(false);
 
-  // Fire celebratory fireworks confetti on scene load
   useEffect(() => {
     const duration = 3.5 * 1000;
     const end = Date.now() + duration;
@@ -39,40 +40,42 @@ export const Scene6Finale: React.FC<Props> = ({ surprise }) => {
     setAccepted(true);
     sound.playSparkle();
 
-    // Final confetti burst
     confetti({
       particleCount: 150,
       spread: 100,
       origin: { y: 0.6 },
     });
 
-    // Trigger photo cleanup
     if (!cleanupDone) {
       setCleanupDone(true);
       await deleteSurprisePhotos(surprise.id);
     }
   };
 
+  const primaryName = surprise.first_name || surprise.details?.primaryName || '';
+  const secondaryName = surprise.last_name || surprise.details?.secondaryName || '';
+  const senderName = surprise.sender_name || surprise.details?.senderName || 'Someone Special';
+  const detailsObj = { primaryName, secondaryName, senderName };
+
   return (
     <div
       id="scene-6"
-      className="min-h-screen w-full flex flex-col justify-between items-center p-6 text-center relative overflow-hidden bg-gradient-to-b from-slate-950 via-purple-950/60 to-slate-950 snap-start pt-16 pb-8"
+      className={`min-h-screen w-full flex flex-col justify-between items-center p-6 text-center relative overflow-hidden bg-gradient-to-b ${theme.bgGradient} snap-start pt-16 pb-8`}
     >
-      {/* Glow Effects */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-tr from-pink-500/20 via-purple-500/20 to-amber-500/20 rounded-full blur-3xl animate-pulse-glow pointer-events-none" />
 
       <div className="my-auto max-w-xl z-10 space-y-6">
         <div className="space-y-3">
-          <span className="px-4 py-1.5 rounded-full bg-gradient-to-r from-pink-500/30 to-amber-500/30 text-amber-300 border border-amber-500/30 text-xs font-bold uppercase tracking-widest inline-block">
-            🎉 Happy Birthday {surprise.first_name}!
+          <span className={`px-4 py-1.5 rounded-full border text-xs font-bold uppercase tracking-widest inline-block ${theme.badgeBg}`}>
+            🎉 Celebration Time
           </span>
 
           <h2 className="text-4xl sm:text-6xl font-extrabold font-heading text-white tracking-tight leading-tight">
-            Here's to your most amazing year yet! 🎂
+            {theme.finaleTitle(detailsObj)}
           </h2>
 
           <p className="text-base sm:text-lg text-slate-300 font-serif italic">
-            May your day be filled with endless smiles, sweet moments, and warm hugs.
+            May your journey be filled with endless smiles, sweet moments, and warmth.
           </p>
         </div>
 
@@ -85,10 +88,10 @@ export const Scene6Finale: React.FC<Props> = ({ surprise }) => {
                 onClick={handleAccept}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-400 via-pink-500 to-rose-500 text-white font-extrabold text-lg shadow-2xl shadow-pink-500/40 hover:brightness-110 transition-all flex items-center justify-center gap-3 mx-auto glow-gold cursor-pointer"
+                className={`px-8 py-4 rounded-2xl bg-gradient-to-r ${theme.buttonGradient} text-white font-extrabold text-lg shadow-2xl shadow-pink-500/40 hover:brightness-110 transition-all flex items-center justify-center gap-3 mx-auto glow-gold cursor-pointer`}
               >
                 <Sparkles className="w-6 h-6" />
-                <span>Accept ✨ / Thank You 💛</span>
+                <span>{theme.acceptButtonText}</span>
               </motion.button>
             ) : (
               <motion.div
@@ -104,7 +107,7 @@ export const Scene6Finale: React.FC<Props> = ({ surprise }) => {
                   Surprise Accepted 💛
                 </h3>
                 <p className="text-sm text-slate-200 font-serif italic">
-                  "Wishing you the happiest year yet 🎂 — from {surprise.sender_name}"
+                  "{theme.finaleMessage(detailsObj)}"
                 </p>
               </motion.div>
             )}
@@ -112,10 +115,9 @@ export const Scene6Finale: React.FC<Props> = ({ surprise }) => {
         </div>
       </div>
 
-      {/* Footer Credit */}
       <div className="z-10 text-xs text-slate-400 space-y-1">
-        <p>Made with 💛 by <strong className="text-pink-300">{surprise.sender_name}</strong></p>
-        <p className="text-[10px] text-slate-500">Birthday Surprise Experience ✨</p>
+        <p>Made with 💛 by <strong className="text-pink-300">{senderName}</strong></p>
+        <p className="text-[10px] text-slate-500">{theme.name} Experience ✨</p>
       </div>
     </div>
   );

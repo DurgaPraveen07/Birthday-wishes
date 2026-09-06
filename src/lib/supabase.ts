@@ -32,11 +32,12 @@ const setLocalStore = (store: Record<string, SurpriseData>) => {
 
 // 1. Upload photo to `temp-photos` bucket
 export async function uploadTempPhoto(
+  type: string,
   surpriseId: string,
   index: number,
   file: File
 ): Promise<string> {
-  const path = `${surpriseId}/${index}_${Date.now()}.${file.name.split('.').pop() || 'jpg'}`;
+  const path = `${type}/${surpriseId}/${index}_${Date.now()}.${file.name.split('.').pop() || 'jpg'}`;
 
   if (isSupabaseConfigured && supabase) {
     const { data, error } = await supabase.storage
@@ -80,11 +81,13 @@ export async function saveSurprise(
       .insert([
         {
           id: record.id,
-          first_name: record.first_name,
-          last_name: record.last_name,
-          sender_name: record.sender_name,
-          dob: record.dob,
-          turning_age: record.turning_age,
+          type: record.type,
+          first_name: record.first_name || '',
+          last_name: record.last_name || '',
+          sender_name: record.sender_name || '',
+          dob: record.dob || null,
+          turning_age: record.turning_age || null,
+          details: record.details || {},
           wishes: record.wishes,
           letter: record.letter,
           photos: record.photos,
@@ -177,13 +180,13 @@ export async function deleteSurprisePhotos(surpriseId: string): Promise<boolean>
   if (isSupabaseConfigured && supabase) {
     try {
       // Invoke Edge Function
-      const { data, error } = await supabase.functions.invoke('delete-photos', {
+      const { error } = await supabase.functions.invoke('delete-photos', {
         body: { surprise_id: surpriseId },
       });
 
       if (error) {
-        console.warn('Edge function invoke error, running fallback client cleanup', error);
-        // Client-side fallback delete if storage policies allow
+        console.warn('Edge function invoke error, running client fallback cleanup', error);
+        // Client-side fallback delete
         const { data: files } = await supabase.storage
           .from('temp-photos')
           .list(surpriseId);

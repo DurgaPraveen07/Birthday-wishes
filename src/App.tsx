@@ -1,34 +1,67 @@
 import React, { useState, useEffect } from 'react';
+import { LandingPage } from './components/landing/LandingPage';
 import { CreatorWizard } from './components/creator/CreatorWizard';
 import { SurpriseViewer } from './components/viewer/SurpriseViewer';
+import { SurpriseType } from './config/themes';
+
+type RouteState =
+  | { page: 'landing' }
+  | { page: 'creator'; type: SurpriseType }
+  | { page: 'viewer'; id: string; type?: SurpriseType };
 
 export function App() {
-  const [route, setRoute] = useState<{ page: 'create' | 'view'; id?: string }>({
-    page: 'create',
-  });
+  const [route, setRoute] = useState<RouteState>({ page: 'landing' });
 
   useEffect(() => {
     const parseRoute = () => {
       const hash = window.location.hash;
       const path = window.location.pathname;
 
+      // Viewer Routes: #/view/:type/:id OR #/view/:id
       if (hash.startsWith('#/view/')) {
-        const id = hash.replace('#/view/', '').trim();
-        if (id) {
-          setRoute({ page: 'view', id });
+        const parts = hash.replace('#/view/', '').split('/').filter(Boolean);
+        if (parts.length >= 2) {
+          const type = parts[0] as SurpriseType;
+          const id = parts[1];
+          setRoute({ page: 'viewer', id, type });
+          return;
+        } else if (parts.length === 1) {
+          const id = parts[0];
+          setRoute({ page: 'viewer', id });
           return;
         }
       }
 
       if (path.startsWith('/view/')) {
-        const id = path.replace('/view/', '').trim();
-        if (id) {
-          setRoute({ page: 'view', id });
+        const parts = path.replace('/view/', '').split('/').filter(Boolean);
+        if (parts.length >= 2) {
+          const type = parts[0] as SurpriseType;
+          const id = parts[1];
+          setRoute({ page: 'viewer', id, type });
+          return;
+        } else if (parts.length === 1) {
+          const id = parts[0];
+          setRoute({ page: 'viewer', id });
           return;
         }
       }
 
-      setRoute({ page: 'create' });
+      // Creator Routes: #/birthday, #/wedding, #/love, #/create
+      if (hash === '#/birthday' || path === '/birthday' || hash === '#/create') {
+        setRoute({ page: 'creator', type: 'birthday' });
+        return;
+      }
+      if (hash === '#/wedding' || path === '/wedding') {
+        setRoute({ page: 'creator', type: 'wedding' });
+        return;
+      }
+      if (hash === '#/love' || path === '/love') {
+        setRoute({ page: 'creator', type: 'love' });
+        return;
+      }
+
+      // Default: Landing Page
+      setRoute({ page: 'landing' });
     };
 
     parseRoute();
@@ -41,11 +74,28 @@ export function App() {
     };
   }, []);
 
-  if (route.page === 'view' && route.id) {
-    return <SurpriseViewer surpriseId={route.id} />;
+  const navigateTo = (path: string) => {
+    window.location.hash = path;
+  };
+
+  if (route.page === 'viewer' && route.id) {
+    return <SurpriseViewer surpriseId={route.id} typeParam={route.type} />;
   }
 
-  return <CreatorWizard />;
+  if (route.page === 'creator') {
+    return (
+      <CreatorWizard
+        type={route.type}
+        onGoHome={() => navigateTo('/')}
+      />
+    );
+  }
+
+  return (
+    <LandingPage
+      onSelectType={(type) => navigateTo(`/${type}`)}
+    />
+  );
 }
 
 export default App;

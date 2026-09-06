@@ -1,21 +1,18 @@
 import React, { useState, useRef } from 'react';
-import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
-import { Mail, Sparkles, Heart } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Sparkles, Heart } from 'lucide-react';
 import { SurpriseData } from '../../../types/surprise';
+import { ThemeConfig } from '../../../config/themes';
 import { sound } from '../../../utils/sound';
 
 interface Props {
+  theme: ThemeConfig;
   surprise: SurpriseData;
 }
 
-export const Scene5Letter: React.FC<Props> = ({ surprise }) => {
+export const Scene5Letter: React.FC<Props> = ({ theme, surprise }) => {
   const [isOpen, setIsOpen] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
-
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ['start end', 'end start'],
-  });
 
   const handleOpenEnvelope = () => {
     sound.playSparkle();
@@ -23,29 +20,29 @@ export const Scene5Letter: React.FC<Props> = ({ surprise }) => {
   };
 
   const letterLines = surprise.letter ? surprise.letter.split('\n') : [];
+  const primaryName = surprise.first_name || surprise.details?.primaryName || '';
+  const senderName = surprise.sender_name || surprise.details?.senderName || 'Someone Special';
 
   return (
     <div
       id="scene-5"
       ref={sectionRef}
-      className="min-h-screen w-full flex flex-col justify-center items-center p-6 text-center relative overflow-hidden bg-slate-950 snap-start py-16"
+      className={`min-h-screen w-full flex flex-col justify-center items-center p-6 text-center relative overflow-hidden bg-slate-950 snap-start py-16`}
     >
-      {/* Background glow */}
       <div className="absolute w-96 h-96 bg-rose-500/15 rounded-full blur-3xl animate-pulse-glow" />
 
       <div className="max-w-xl w-full z-10 space-y-6">
         <div className="space-y-2">
-          <span className="px-4 py-1.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-bold uppercase tracking-widest inline-block">
-            💌 Sealed Letter
+          <span className={`px-4 py-1.5 rounded-full border text-xs font-bold uppercase tracking-widest inline-block ${theme.badgeBg}`}>
+            {theme.letterBadge}
           </span>
           <h2 className="text-3xl sm:text-5xl font-bold font-heading text-white">
-            A Message From {surprise.sender_name} ✨
+            {theme.letterTitleViewer({ senderName })}
           </h2>
         </div>
 
         <AnimatePresence mode="wait">
           {!isOpen ? (
-            /* Sealed Envelope Card */
             <motion.div
               key="envelope"
               initial={{ scale: 0.9, opacity: 0 }}
@@ -65,19 +62,18 @@ export const Scene5Letter: React.FC<Props> = ({ surprise }) => {
                   Tap to Break Golden Seal
                 </h3>
                 <p className="text-xs text-slate-300">
-                  Written exclusively for {surprise.first_name}
+                  Written exclusively for {primaryName || 'You'}
                 </p>
               </div>
 
               <button
                 type="button"
-                className="px-6 py-2.5 rounded-full bg-pink-500 hover:bg-pink-600 text-white font-bold text-xs shadow-lg group-hover:scale-105 transition-transform flex items-center justify-center gap-2 mx-auto"
+                className={`px-6 py-2.5 rounded-full bg-gradient-to-r ${theme.buttonGradient} text-white font-bold text-xs shadow-lg group-hover:scale-105 transition-transform flex items-center justify-center gap-2 mx-auto`}
               >
                 <Sparkles className="w-4 h-4" /> Open Letter ✨
               </button>
             </motion.div>
           ) : (
-            /* Revealed Letter Box */
             <motion.div
               key="letter-content"
               initial={{ scale: 0.9, opacity: 0 }}
@@ -87,12 +83,11 @@ export const Scene5Letter: React.FC<Props> = ({ surprise }) => {
             >
               <div className="flex items-center justify-between border-b border-rose-200 pb-3">
                 <span className="text-xs font-bold text-rose-600 uppercase tracking-widest flex items-center gap-1.5">
-                  <Heart className="w-4 h-4 text-rose-500 fill-rose-500" /> Dearest {surprise.first_name},
+                  <Heart className="w-4 h-4 text-rose-500 fill-rose-500" /> Dearest {primaryName || 'Friend'},
                 </span>
-                <span className="text-xs text-rose-400 font-serif italic">From {surprise.sender_name}</span>
+                <span className="text-xs text-rose-500 font-serif italic">From {senderName}</span>
               </div>
 
-              {/* Ink writing effect per line */}
               <div className="space-y-3 font-serif text-base sm:text-lg leading-relaxed text-slate-800 italic pt-2">
                 {letterLines.map((line, idx) => (
                   <motion.p
@@ -111,7 +106,7 @@ export const Scene5Letter: React.FC<Props> = ({ surprise }) => {
                   With all my love,
                 </span>
                 <span className="font-heading text-base font-bold text-slate-900">
-                  {surprise.sender_name} 💛
+                  {senderName} 💛
                 </span>
               </div>
             </motion.div>

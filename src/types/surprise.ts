@@ -1,3 +1,5 @@
+import { SurpriseType } from '../config/themes';
+
 export interface PhotoItem {
   id: string;
   file?: File;
@@ -8,11 +10,13 @@ export interface PhotoItem {
 
 export interface SurpriseData {
   id: string;
+  type: SurpriseType;
   first_name: string;
   last_name: string;
   sender_name: string;
   dob: string | null;
   turning_age: number | null;
+  details: Record<string, any>;
   wishes: string[];
   letter: string;
   photos: Array<{ storage_path: string; caption: string }>;
@@ -22,11 +26,13 @@ export interface SurpriseData {
 }
 
 export interface CreatorFormState {
-  first_name: string;
-  last_name: string;
-  sender_name: string;
-  dob: string;
-  turning_age: string;
+  type: SurpriseType;
+  primaryName: string;
+  secondaryName: string;
+  senderName: string;
+  dateValue: string;
+  extraNumber: string;
+  details: Record<string, any>;
   wishes: string[];
   photos: PhotoItem[];
   skipPhotos: boolean;

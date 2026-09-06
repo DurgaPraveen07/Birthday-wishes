@@ -1,14 +1,15 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { Camera, Sparkles, Image as ImageIcon } from 'lucide-react';
 import { SurpriseData } from '../../../types/surprise';
+import { ThemeConfig } from '../../../config/themes';
 import { getPhotoDisplayUrls } from '../../../lib/supabase';
 
 interface Props {
+  theme: ThemeConfig;
   surprise: SurpriseData;
 }
 
-export const Scene4Photos: React.FC<Props> = ({ surprise }) => {
+export const Scene4Photos: React.FC<Props> = ({ theme, surprise }) => {
   const [photoList, setPhotoList] = useState<Array<{ url: string; caption: string }>>([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,7 +35,6 @@ export const Scene4Photos: React.FC<Props> = ({ surprise }) => {
     offset: ['start end', 'end start'],
   });
 
-  // Transform vertical scroll into horizontal translation for filmstrip
   const xTransform = useTransform(scrollYProgress, [0.2, 0.8], ['15%', '-60%']);
 
   if (loading) {
@@ -46,11 +46,10 @@ export const Scene4Photos: React.FC<Props> = ({ surprise }) => {
   }
 
   if (photoList.length === 0) {
-    // Skipped photos fallback view
     return (
       <div
         id="scene-4"
-        className="min-h-screen w-full flex flex-col items-center justify-center p-6 text-center bg-slate-950 snap-start space-y-4"
+        className={`min-h-screen w-full flex flex-col items-center justify-center p-6 text-center bg-slate-950 snap-start space-y-4`}
       >
         <div className="w-16 h-16 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-3xl">
           ✨
@@ -59,7 +58,7 @@ export const Scene4Photos: React.FC<Props> = ({ surprise }) => {
           A Trail of Magical Moments
         </h3>
         <p className="text-sm text-slate-300 max-w-md italic font-serif">
-          "Every second spent celebrating you is a memory worth treasuring forever."
+          "Every second spent together is a memory worth treasuring forever."
         </p>
       </div>
     );
@@ -69,22 +68,22 @@ export const Scene4Photos: React.FC<Props> = ({ surprise }) => {
     <div
       id="scene-4"
       ref={sectionRef}
-      className="min-h-[140vh] w-full flex flex-col justify-center relative overflow-hidden bg-gradient-to-b from-slate-950 via-pink-950/20 to-slate-950 snap-start py-20"
+      className={`min-h-[140vh] w-full flex flex-col justify-center relative overflow-hidden bg-gradient-to-b ${theme.bgGradient} snap-start py-20`}
     >
       {/* Top Header */}
       <div className="text-center space-y-2 z-10 px-4">
-        <span className="px-4 py-1.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold uppercase tracking-widest inline-block">
+        <span className={`px-4 py-1.5 rounded-full border text-xs font-bold uppercase tracking-widest inline-block ${theme.badgeBg}`}>
           📸 Photo Memories ({photoList.length} Photos)
         </span>
         <h2 className="text-3xl sm:text-5xl font-bold font-heading text-white">
-          Woven in Gold Strings ✨
+          Woven in Golden Light ✨
         </h2>
-        <p className="text-xs sm:text-sm text-slate-400">
-          Scroll or drag sideways to journey through your favorite memories
+        <p className="text-xs sm:text-sm text-slate-300">
+          Scroll or drag sideways to journey through favorite memories
         </p>
       </div>
 
-      {/* Horizontal Film Reel Container */}
+      {/* Horizontal Film Reel */}
       <div className="my-12 overflow-x-auto overflow-y-hidden no-scrollbar px-6 cursor-grab active:cursor-grabbing">
         <motion.div
           style={{ x: xTransform }}
@@ -97,10 +96,8 @@ export const Scene4Photos: React.FC<Props> = ({ surprise }) => {
               initial={{ rotate: index % 2 === 0 ? -3 : 3 }}
               className="glass-card p-4 rounded-3xl w-72 sm:w-80 flex-shrink-0 space-y-3 shadow-2xl border-white/20 transform transition-all duration-300 relative group"
             >
-              {/* Polaroid Top Pin */}
               <div className="w-4 h-4 rounded-full bg-amber-400/80 border border-amber-200 shadow-md mx-auto -mt-6 mb-2" />
 
-              {/* Photo Frame */}
               <div className="w-full h-72 sm:h-80 rounded-2xl overflow-hidden bg-slate-900 relative">
                 <img
                   src={photo.url}
@@ -109,7 +106,6 @@ export const Scene4Photos: React.FC<Props> = ({ surprise }) => {
                 />
               </div>
 
-              {/* Caption */}
               {photo.caption ? (
                 <p className="text-center text-sm font-semibold text-white font-serif italic line-clamp-2 px-2">
                   "{photo.caption}"
@@ -124,7 +120,7 @@ export const Scene4Photos: React.FC<Props> = ({ surprise }) => {
         </motion.div>
       </div>
 
-      <div className="text-center text-xs text-slate-500 z-10">
+      <div className="text-center text-xs text-slate-400 z-10">
         Swipe or scroll to see all photos ✨
       </div>
     </div>

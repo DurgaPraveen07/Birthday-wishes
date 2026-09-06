@@ -1,15 +1,17 @@
 import React, { useRef, useState } from 'react';
 import { Sparkles, Upload, Trash2, ArrowUp, ArrowDown, Image as ImageIcon, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { CreatorFormState, PhotoItem } from '../../types/surprise';
+import { ThemeConfig } from '../../config/themes';
 
 interface Props {
+  theme: ThemeConfig;
   form: CreatorFormState;
   onChange: (fields: Partial<CreatorFormState>) => void;
   onNext: () => void;
   onPrev: () => void;
 }
 
-export const Step3Photos: React.FC<Props> = ({ form, onChange, onNext, onPrev }) => {
+export const Step3Photos: React.FC<Props> = ({ theme, form, onChange, onNext, onPrev }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -27,7 +29,7 @@ export const Step3Photos: React.FC<Props> = ({ form, onChange, onNext, onPrev })
       const file = files[i];
 
       if (!['image/jpeg', 'image/png', 'image/jpg', 'image/webp'].includes(file.type)) {
-        setErrorMsg('Please upload valid JPG or PNG images.');
+        setErrorMsg('Please upload valid JPG, PNG or WEBP images.');
         continue;
       }
 
@@ -81,15 +83,13 @@ export const Step3Photos: React.FC<Props> = ({ form, onChange, onNext, onPrev })
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="text-center space-y-2">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-semibold uppercase tracking-wider border border-amber-500/30">
+        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${theme.badgeBg}`}>
           <Sparkles className="w-3.5 h-3.5" /> Step 3 of 5
         </div>
         <h2 className="text-2xl sm:text-3xl font-bold font-heading text-white">
-          Photo Memories 📸
+          {theme.photosTitle}
         </h2>
-        <p className="text-sm text-slate-300">
-          Upload up to 5 favourite pictures. They'll drift across the screen like a glowing film strip!
-        </p>
+        <p className="text-sm text-slate-300">{theme.photosSubtitle}</p>
       </div>
 
       {/* Skip Toggle */}
@@ -164,7 +164,7 @@ export const Step3Photos: React.FC<Props> = ({ form, onChange, onNext, onPrev })
                 <input
                   type="text"
                   maxLength={60}
-                  placeholder="Add a sweet caption (e.g. Summer '23 ✨)"
+                  placeholder="Add a sweet caption (e.g. Memory ✨)"
                   value={photo.caption}
                   onChange={(e) => handleCaptionChange(photo.id, e.target.value)}
                   className="w-full bg-slate-950/80 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-pink-500"
@@ -210,7 +210,7 @@ export const Step3Photos: React.FC<Props> = ({ form, onChange, onNext, onPrev })
       <div className="p-3 rounded-xl bg-slate-900/40 border border-slate-800/80 flex items-start gap-2.5">
         <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
         <p className="text-[11px] text-slate-400 leading-relaxed">
-          <strong className="text-slate-300">Privacy First:</strong> Photos are temporarily stored in Supabase storage for the recipient to view, and automatically deleted after they finish the birthday experience!
+          <strong className="text-slate-300">Privacy First:</strong> Photos are temporarily stored in Supabase storage for the recipient to view, and automatically deleted after they finish the experience!
         </p>
       </div>
 
@@ -219,7 +219,7 @@ export const Step3Photos: React.FC<Props> = ({ form, onChange, onNext, onPrev })
         <button
           type="button"
           onClick={onPrev}
-          className="px-5 py-3.5 rounded-xl border border-slate-700 text-slate-300 font-semibold hover:bg-slate-800 transition-all flex items-center gap-2"
+          className="px-5 py-3.5 rounded-xl border border-slate-700 text-slate-300 font-semibold hover:bg-slate-800 transition-all flex items-center gap-2 text-sm"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back</span>
@@ -227,7 +227,7 @@ export const Step3Photos: React.FC<Props> = ({ form, onChange, onNext, onPrev })
         <button
           type="button"
           onClick={onNext}
-          className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold shadow-lg shadow-pink-500/25 hover:from-pink-600 hover:to-rose-600 active:scale-[0.99] transition-all flex items-center justify-center gap-2 text-base"
+          className={`flex-1 py-3.5 rounded-xl bg-gradient-to-r ${theme.buttonGradient} text-white font-semibold shadow-lg shadow-pink-500/25 active:scale-[0.99] transition-all flex items-center justify-center gap-2 text-base`}
         >
           <span>Continue to Letter 💌</span>
         </button>

@@ -1,13 +1,15 @@
--- SQL Migration Schema for Birthday Surprise App
+-- SQL Migration Schema for Multi-Theme Surprise App (Birthday, Wedding, Love)
 
--- 1. Create `surprises` table
+-- 1. Create `surprises` table with `type` and `details` JSONB
 CREATE TABLE IF NOT EXISTS public.surprises (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  first_name TEXT NOT NULL,
+  type TEXT NOT NULL DEFAULT 'birthday',
+  first_name TEXT NOT NULL DEFAULT '',
   last_name TEXT NOT NULL DEFAULT '',
-  sender_name TEXT NOT NULL,
+  sender_name TEXT NOT NULL DEFAULT '',
   dob DATE DEFAULT NULL,
   turning_age INTEGER DEFAULT NULL,
+  details JSONB NOT NULL DEFAULT '{}'::jsonb,
   wishes JSONB NOT NULL DEFAULT '[]'::jsonb,
   letter TEXT NOT NULL DEFAULT '',
   photos JSONB NOT NULL DEFAULT '[]'::jsonb,
@@ -15,6 +17,10 @@ CREATE TABLE IF NOT EXISTS public.surprises (
   viewed_at TIMESTAMPTZ DEFAULT NULL,
   photos_deleted BOOLEAN NOT NULL DEFAULT FALSE
 );
+
+-- Migrations for existing tables if already created
+ALTER TABLE public.surprises ADD COLUMN IF NOT EXISTS type TEXT NOT NULL DEFAULT 'birthday';
+ALTER TABLE public.surprises ADD COLUMN IF NOT EXISTS details JSONB NOT NULL DEFAULT '{}'::jsonb;
 
 -- Enable RLS
 ALTER TABLE public.surprises ENABLE ROW LEVEL SECURITY;
@@ -29,14 +35,13 @@ CREATE POLICY "Allow public insert surprises"
   ON public.surprises FOR INSERT
   WITH CHECK (true);
 
--- Allow public update access (for marking viewed_at)
+-- Allow public update access (for marking viewed_at and photo deletion status)
 CREATE POLICY "Allow public update viewed_at"
   ON public.surprises FOR UPDATE
   USING (true)
   WITH CHECK (true);
 
 -- 2. Storage Setup for `temp-photos`
--- Create bucket if not exists
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('temp-photos', 'temp-photos', true)
 ON CONFLICT (id) DO NOTHING;

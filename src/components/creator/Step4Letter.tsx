@@ -1,30 +1,17 @@
 import React, { useState } from 'react';
 import { Sparkles, Lightbulb, Heart, ArrowLeft } from 'lucide-react';
 import { CreatorFormState } from '../../types/surprise';
+import { ThemeConfig } from '../../config/themes';
 
 interface Props {
+  theme: ThemeConfig;
   form: CreatorFormState;
   onChange: (fields: Partial<CreatorFormState>) => void;
   onNext: () => void;
   onPrev: () => void;
 }
 
-const SAMPLE_LETTERS = [
-  {
-    title: '❤️ Heartfelt & Warm',
-    text: `Happy Birthday! I hope today brings you as much happiness as you bring to everyone around you. Thank you for being such an extraordinary, kind, and beautiful soul. I am so grateful to have you in my life! Here's to making this year your happiest one yet! ✨`,
-  },
-  {
-    title: '🎉 Playful & Fun',
-    text: `Happy Birthday legend! Another year older, wiser, and somehow still as cool as ever. May your day be filled with cake, laughter, and zero adulting responsibilities! Thanks for always bringing the fun wherever you go. Let's celebrate soon! 🥂`,
-  },
-  {
-    title: '🌟 Inspiring & Deep',
-    text: `Happy Birthday! Looking back at everything you've accomplished this past year makes me so proud. You inspire everyone with your grace and strength. May this new chapter bring you endless growth, peace, and unforgettable adventures. 💛`,
-  },
-];
-
-export const Step4Letter: React.FC<Props> = ({ form, onChange, onNext, onPrev }) => {
+export const Step4Letter: React.FC<Props> = ({ theme, form, onChange, onNext, onPrev }) => {
   const [showPresets, setShowPresets] = useState(false);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -37,15 +24,13 @@ export const Step4Letter: React.FC<Props> = ({ form, onChange, onNext, onPrev })
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="text-center space-y-2">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 text-xs font-semibold uppercase tracking-wider border border-rose-500/30">
+        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${theme.badgeBg}`}>
           <Sparkles className="w-3.5 h-3.5" /> Step 4 of 5
         </div>
         <h2 className="text-2xl sm:text-3xl font-bold font-heading text-white">
-          The Birthday Letter 💌
+          {theme.letterTitle}
         </h2>
-        <p className="text-sm text-slate-300">
-          Write a personal note. In the viewer, it will magically reveal like ink materializing on paper!
-        </p>
+        <p className="text-sm text-slate-300">{theme.letterSubtitle}</p>
       </div>
 
       {/* Header controls */}
@@ -71,7 +56,7 @@ export const Step4Letter: React.FC<Props> = ({ form, onChange, onNext, onPrev })
             Select a sample letter to customize:
           </h4>
           <div className="space-y-2">
-            {SAMPLE_LETTERS.map((preset, idx) => (
+            {theme.letterPresets.map((preset, idx) => (
               <button
                 key={idx}
                 type="button"
@@ -94,7 +79,7 @@ export const Step4Letter: React.FC<Props> = ({ form, onChange, onNext, onPrev })
         <textarea
           rows={6}
           maxLength={500}
-          placeholder="Dear Alex, Happy Birthday! I wanted to let you know..."
+          placeholder={theme.letterPrompt}
           value={form.letter}
           onChange={handleTextChange}
           className="w-full bg-slate-900/90 border border-slate-700/80 rounded-2xl p-4 text-white text-sm leading-relaxed placeholder-slate-500 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-all resize-none font-serif"
@@ -110,7 +95,7 @@ export const Step4Letter: React.FC<Props> = ({ form, onChange, onNext, onPrev })
         <button
           type="button"
           onClick={onPrev}
-          className="px-5 py-3.5 rounded-xl border border-slate-700 text-slate-300 font-semibold hover:bg-slate-800 transition-all flex items-center gap-2"
+          className="px-5 py-3.5 rounded-xl border border-slate-700 text-slate-300 font-semibold hover:bg-slate-800 transition-all flex items-center gap-2 text-sm"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back</span>
@@ -119,7 +104,7 @@ export const Step4Letter: React.FC<Props> = ({ form, onChange, onNext, onPrev })
           type="button"
           onClick={onNext}
           disabled={!isFormValid}
-          className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold shadow-lg shadow-pink-500/25 hover:from-pink-600 hover:to-rose-600 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 text-base"
+          className={`flex-1 py-3.5 rounded-xl bg-gradient-to-r ${theme.buttonGradient} text-white font-semibold shadow-lg shadow-pink-500/25 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 text-base`}
         >
           <span>Review & Bake Magic ✨</span>
         </button>

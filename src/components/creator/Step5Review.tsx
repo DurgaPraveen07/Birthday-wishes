@@ -1,23 +1,25 @@
 import React, { useState } from 'react';
-import { Sparkles, Copy, Check, Share2, Eye, ArrowLeft, Loader2, Heart, Gift } from 'lucide-react';
+import { Sparkles, Copy, Check, Share2, Eye, ArrowLeft, Loader2 } from 'lucide-react';
 import { CreatorFormState } from '../../types/surprise';
+import { ThemeConfig } from '../../config/themes';
 
 interface Props {
+  theme: ThemeConfig;
   form: CreatorFormState;
   onPrev: () => void;
   onBake: () => Promise<string>;
   onReset: () => void;
 }
 
-export const Step5Review: React.FC<Props> = ({ form, onPrev, onBake, onReset }) => {
+export const Step5Review: React.FC<Props> = ({ theme, form, onPrev, onBake, onReset }) => {
   const [isBaking, setIsBaking] = useState(false);
   const [bakingStep, setBakingStep] = useState(0);
   const [generatedId, setGeneratedId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   const BAKING_STEPS = [
-    '🥣 Mixing sweet birthday wishes...',
-    '🎈 Inflating custom celebration balloons...',
+    '🥣 Mixing sweet wishes & memories...',
+    '🎈 Inflating celebration balloons...',
     '📸 Stringing up fairy-light photo memories...',
     '✉️ Sealing letter with golden wax...',
     '✨ Baking final magic link!',
@@ -48,7 +50,7 @@ export const Step5Review: React.FC<Props> = ({ form, onPrev, onBake, onReset }) 
   const getShareableUrl = () => {
     if (!generatedId) return '';
     const base = window.location.origin + window.location.pathname;
-    return `${base}#/view/${generatedId}`;
+    return `${base}#/view/${theme.type}/${generatedId}`;
   };
 
   const handleCopyLink = () => {
@@ -61,7 +63,7 @@ export const Step5Review: React.FC<Props> = ({ form, onPrev, onBake, onReset }) 
   const handleWhatsAppShare = () => {
     const url = getShareableUrl();
     const message = encodeURIComponent(
-      `Hey ${form.first_name}! 🎂 Someone who loves you created a personalized birthday surprise just for you! Unwrap it here: ${url}`
+      `Hey ${form.primaryName}! ${theme.emoji} Someone who loves you created a personalized surprise just for you! Unwrap it here: ${url}`
     );
     window.open(`https://wa.me/?text=${message}`, '_blank');
   };
@@ -69,7 +71,7 @@ export const Step5Review: React.FC<Props> = ({ form, onPrev, onBake, onReset }) 
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="text-center space-y-2">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold-500/20 text-amber-300 text-xs font-semibold uppercase tracking-wider border border-amber-500/30">
+        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${theme.badgeBg}`}>
           <Sparkles className="w-3.5 h-3.5" /> Step 5 of 5
         </div>
         <h2 className="text-2xl sm:text-3xl font-bold font-heading text-white">
@@ -86,19 +88,19 @@ export const Step5Review: React.FC<Props> = ({ form, onPrev, onBake, onReset }) 
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <div>
               <span className="text-[11px] font-semibold text-pink-400 uppercase tracking-wider">
-                Recipient & Sender
+                {theme.name} Details
               </span>
               <h3 className="text-lg font-bold text-white font-heading">
-                {form.first_name} {form.last_name}
+                {form.primaryName} {form.secondaryName}
               </h3>
               <p className="text-xs text-slate-400">
-                Created with 💛 by <strong>{form.sender_name}</strong>
+                Created with 💛 by <strong>{form.senderName}</strong>
               </p>
             </div>
-            {form.turning_age && (
+            {form.extraNumber && (
               <div className="text-center bg-pink-500/20 border border-pink-500/30 px-3 py-1.5 rounded-xl">
-                <span className="text-[10px] text-pink-300 uppercase block">Turning</span>
-                <span className="text-lg font-extrabold text-pink-400">{form.turning_age}</span>
+                <span className="text-[10px] text-pink-300 uppercase block">Count</span>
+                <span className="text-lg font-extrabold text-pink-400">{form.extraNumber}</span>
               </div>
             )}
           </div>
@@ -106,7 +108,7 @@ export const Step5Review: React.FC<Props> = ({ form, onPrev, onBake, onReset }) 
           {/* Wishes Summary */}
           <div className="space-y-1.5">
             <span className="text-xs font-semibold text-purple-300 uppercase tracking-wider flex items-center gap-1.5">
-              🎈 Wishes ({form.wishes.length} Balloons)
+              🎈 {theme.wishesLabel} ({form.wishes.length} Balloons)
             </span>
             <ul className="space-y-1 text-xs text-slate-300 pl-2">
               {form.wishes.map((w, i) => (
@@ -176,12 +178,12 @@ export const Step5Review: React.FC<Props> = ({ form, onPrev, onBake, onReset }) 
       {generatedId && (
         <div className="p-6 rounded-2xl bg-gradient-to-b from-slate-900 via-purple-950 to-slate-900 border border-pink-500/40 text-center space-y-5 shadow-2xl animate-fadeIn">
           <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-pink-500 to-amber-400 text-white flex items-center justify-center mx-auto text-3xl shadow-lg glow-pink">
-            🎁
+            {theme.emoji}
           </div>
 
           <div className="space-y-2">
             <h3 className="text-2xl font-bold font-heading text-white">
-              Surprise Ready for {form.first_name}! 🎉
+              Surprise Ready for {form.primaryName}! 🎉
             </h3>
             <p className="text-xs text-slate-300">
               Share this magic link with them. As soon as they finish scrolling through, temporary photos will automatically clean up!
@@ -234,7 +236,7 @@ export const Step5Review: React.FC<Props> = ({ form, onPrev, onBake, onReset }) 
               onClick={onReset}
               className="text-xs text-slate-400 hover:text-white underline"
             >
-              Create another birthday surprise ✨
+              Create another surprise ✨
             </button>
           </div>
         </div>
@@ -246,7 +248,7 @@ export const Step5Review: React.FC<Props> = ({ form, onPrev, onBake, onReset }) 
           <button
             type="button"
             onClick={onPrev}
-            className="px-5 py-3.5 rounded-xl border border-slate-700 text-slate-300 font-semibold hover:bg-slate-800 transition-all flex items-center gap-2"
+            className="px-5 py-3.5 rounded-xl border border-slate-700 text-slate-300 font-semibold hover:bg-slate-800 transition-all flex items-center gap-2 text-sm"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Back</span>
@@ -254,7 +256,7 @@ export const Step5Review: React.FC<Props> = ({ form, onPrev, onBake, onReset }) 
           <button
             type="button"
             onClick={handleStartBaking}
-            className="flex-1 py-4 rounded-xl bg-gradient-to-r from-amber-400 via-pink-500 to-rose-500 text-white font-bold shadow-xl shadow-pink-500/30 hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2 text-base glow-pink"
+            className={`flex-1 py-4 rounded-xl bg-gradient-to-r ${theme.buttonGradient} text-white font-bold shadow-xl shadow-pink-500/30 hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2 text-base glow-pink`}
           >
             <Sparkles className="w-5 h-5" />
             <span>Bake the Magic ✨</span>

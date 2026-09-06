@@ -1,50 +1,53 @@
 import React, { useState, useEffect } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Gift, ChevronDown, Clock, Sparkles } from 'lucide-react';
 import { SurpriseData } from '../../../types/surprise';
+import { ThemeConfig } from '../../../config/themes';
 import { sound } from '../../../utils/sound';
 
 interface Props {
+  theme: ThemeConfig;
   surprise: SurpriseData;
   containerRef: React.RefObject<HTMLDivElement>;
-  onUnwrap?: () => void;
 }
 
-export const Scene1Cover: React.FC<Props> = ({ surprise, containerRef }) => {
+export const Scene1Cover: React.FC<Props> = ({ theme, surprise, containerRef }) => {
   const [timeLeft, setTimeLeft] = useState<{ hours: number; minutes: number; seconds: number } | null>(null);
   const [isBypassed, setIsBypassed] = useState(false);
   const [isUnwrapped, setIsUnwrapped] = useState(false);
 
-  // Check if today is before birthday
-  const checkBirthdayStatus = () => {
-    if (!surprise.dob) return false;
+  const primaryName = surprise.first_name || surprise.details?.primaryName || '';
+  const secondaryName = surprise.last_name || surprise.details?.secondaryName || '';
+  const dateValue = surprise.dob || surprise.details?.dateValue || null;
+
+  const checkDateStatus = () => {
+    if (!dateValue) return false;
     const today = new Date();
-    const dobDate = new Date(surprise.dob);
+    const targetDate = new Date(dateValue);
 
     const isSameDay =
-      today.getMonth() === dobDate.getMonth() &&
-      today.getDate() === dobDate.getDate();
+      today.getMonth() === targetDate.getMonth() &&
+      today.getDate() === targetDate.getDate();
 
     if (isSameDay) return false;
 
-    // Check if birthday is coming up today/tonight
-    const nextBday = new Date(today.getFullYear(), dobDate.getMonth(), dobDate.getDate());
-    if (today > nextBday) {
-      nextBday.setFullYear(today.getFullYear() + 1);
+    const nextDate = new Date(today.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+    if (today > nextDate) {
+      nextDate.setFullYear(today.getFullYear() + 1);
     }
-    const diffMs = nextBday.getTime() - today.getTime();
+    const diffMs = nextDate.getTime() - today.getTime();
     return diffMs > 0 && diffMs < 24 * 60 * 60 * 1000;
   };
 
-  const isBeforeBirthday = checkBirthdayStatus();
+  const isBeforeTarget = checkDateStatus();
 
   useEffect(() => {
-    if (!isBeforeBirthday || isBypassed) return;
+    if (!isBeforeTarget || isBypassed) return;
 
     const timer = setInterval(() => {
       const today = new Date();
-      const dobDate = new Date(surprise.dob!);
-      const midnight = new Date(today.getFullYear(), dobDate.getMonth(), dobDate.getDate(), 0, 0, 0);
+      const targetDate = new Date(dateValue!);
+      const midnight = new Date(today.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 0, 0, 0);
 
       const diff = Math.max(0, midnight.getTime() - today.getTime());
       const hours = Math.floor(diff / (1000 * 60 * 60));
@@ -55,33 +58,33 @@ export const Scene1Cover: React.FC<Props> = ({ surprise, containerRef }) => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isBeforeBirthday, isBypassed, surprise.dob]);
+  }, [isBeforeTarget, isBypassed, dateValue]);
 
   const handleUnwrap = () => {
     sound.playUnwrap();
     setIsUnwrapped(true);
-    // Smooth scroll to scene 2
     if (containerRef.current) {
       const nextEl = document.getElementById('scene-2');
       nextEl?.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
+  const detailsObj = { primaryName, secondaryName };
+
   return (
     <div
       id="scene-1"
-      className="min-h-screen w-full flex flex-col justify-between items-center p-6 text-center relative overflow-hidden bg-gradient-to-b from-slate-950 via-pink-950/40 to-slate-950 snap-start"
+      className={`min-h-screen w-full flex flex-col justify-between items-center p-6 text-center relative overflow-hidden bg-gradient-to-b ${theme.bgGradient} snap-start`}
     >
-      {/* Glow Backdrops */}
       <div className="absolute top-1/3 w-80 h-80 bg-pink-500/20 rounded-full blur-3xl animate-pulse-glow" />
 
       <div className="pt-12 space-y-3 z-10 max-w-lg">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/30 text-xs font-bold uppercase tracking-widest"
+          className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest ${theme.badgeBg}`}
         >
-          <Sparkles className="w-3.5 h-3.5" /> Birthday Surprise
+          <Sparkles className="w-3.5 h-3.5" /> {theme.coverBadge}
         </motion.div>
 
         <motion.h1
@@ -90,24 +93,21 @@ export const Scene1Cover: React.FC<Props> = ({ surprise, containerRef }) => {
           transition={{ delay: 0.2 }}
           className="text-4xl sm:text-6xl font-extrabold text-white font-heading tracking-tight leading-tight"
         >
-          A surprise for <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-rose-300 to-amber-300">
-            {surprise.first_name} {surprise.last_name}
-          </span>
+          {theme.coverTitle(detailsObj)}
         </motion.h1>
 
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
-          className="text-sm sm:text-base text-slate-300"
+          className="text-sm sm:text-base text-slate-300 font-serif italic"
         >
-          Someone who loves you made this — just for you 💌
+          {theme.coverSubtitle}
         </motion.p>
       </div>
 
-      {/* Countdown overlay if before birthday */}
-      {isBeforeBirthday && !isBypassed ? (
+      {/* Countdown overlay */}
+      {isBeforeTarget && !isBypassed ? (
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -149,7 +149,7 @@ export const Scene1Cover: React.FC<Props> = ({ surprise, containerRef }) => {
           </button>
         </motion.div>
       ) : (
-        /* Present Box Unwrap Interactive Card */
+        /* Present Box Unwrap Card */
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -163,17 +163,17 @@ export const Scene1Cover: React.FC<Props> = ({ surprise, containerRef }) => {
               scale: [1, 1.05, 1],
             }}
             transition={{ repeat: Infinity, duration: 3 }}
-            className={`w-32 h-32 sm:w-40 sm:h-40 rounded-3xl bg-gradient-to-tr from-pink-500 via-rose-500 to-amber-400 p-1 shadow-2xl glow-pink flex items-center justify-center relative ${
+            className={`w-32 h-32 sm:w-40 sm:h-40 rounded-3xl bg-gradient-to-tr ${theme.buttonGradient} p-1 shadow-2xl glow-pink flex items-center justify-center relative ${
               isUnwrapped ? 'scale-110 opacity-0 transition-all duration-500' : ''
             }`}
           >
             <div className="w-full h-full bg-slate-950/80 rounded-[22px] flex flex-col items-center justify-center text-4xl sm:text-5xl border border-pink-400/30">
-              🎁
+              {theme.emoji}
             </div>
           </motion.div>
 
           <div className="space-y-1">
-            <span className="px-5 py-2.5 rounded-full bg-pink-500 text-white font-bold text-sm shadow-lg group-hover:scale-105 transition-transform flex items-center gap-2">
+            <span className={`px-5 py-2.5 rounded-full bg-gradient-to-r ${theme.buttonGradient} text-white font-bold text-sm shadow-lg group-hover:scale-105 transition-transform flex items-center gap-2`}>
               <Gift className="w-4 h-4" /> Unwrap it ✨
             </span>
             <p className="text-[11px] text-slate-400">Tap or scroll down to open</p>

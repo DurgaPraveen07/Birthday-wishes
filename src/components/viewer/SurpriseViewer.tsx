@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { SurpriseData } from '../../types/surprise';
+import { THEMES, SurpriseType } from '../../config/themes';
 import { getSurprise } from '../../lib/supabase';
 import { Scene1Cover } from './scenes/Scene1Cover';
 import { Scene2Intro } from './scenes/Scene2Intro';
@@ -12,9 +13,10 @@ import { sound } from '../../utils/sound';
 
 interface Props {
   surpriseId: string;
+  typeParam?: SurpriseType;
 }
 
-export const SurpriseViewer: React.FC<Props> = ({ surpriseId }) => {
+export const SurpriseViewer: React.FC<Props> = ({ surpriseId, typeParam }) => {
   const [surprise, setSurprise] = useState<SurpriseData | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -57,7 +59,7 @@ export const SurpriseViewer: React.FC<Props> = ({ surpriseId }) => {
           <Loader2 className="w-8 h-8" />
         </div>
         <p className="text-sm font-semibold text-pink-300 animate-pulse">
-          Unwrapping birthday magic... ✨
+          Unwrapping magic surprise... ✨
         </p>
       </div>
     );
@@ -71,22 +73,25 @@ export const SurpriseViewer: React.FC<Props> = ({ surpriseId }) => {
         </div>
         <h2 className="text-2xl font-bold font-heading">Surprise Not Found</h2>
         <p className="text-xs text-slate-400 max-w-sm">
-          This birthday link might have expired, or the ID is incorrect.
+          This surprise link might have expired, or the ID is incorrect.
         </p>
         <a
-          href="#/create"
+          href="#/"
           className="px-6 py-3 rounded-xl bg-pink-500 hover:bg-pink-600 text-white text-xs font-bold shadow-lg transition-all"
         >
-          Create a Birthday Surprise ✨
+          Create a Surprise ✨
         </a>
       </div>
     );
   }
 
+  const effectiveType: SurpriseType = surprise.type || typeParam || 'birthday';
+  const theme = THEMES[effectiveType] || THEMES.birthday;
+
   return (
     <div
       ref={containerRef}
-      className="h-screen w-full overflow-y-auto overflow-x-hidden snap-y snap-mandatory scroll-smooth bg-slate-950 relative"
+      className={`h-screen w-full overflow-y-auto overflow-x-hidden snap-y snap-mandatory scroll-smooth bg-slate-950 relative`}
     >
       {/* Global Floating Festive Music Button */}
       <div className="fixed top-6 right-6 z-50">
@@ -111,22 +116,22 @@ export const SurpriseViewer: React.FC<Props> = ({ surpriseId }) => {
       </div>
 
       {/* 1. Cover Scene */}
-      <Scene1Cover surprise={surprise} containerRef={containerRef} />
+      <Scene1Cover theme={theme} surprise={surprise} containerRef={containerRef} />
 
       {/* 2. Intro Scene */}
-      <Scene2Intro surprise={surprise} />
+      <Scene2Intro theme={theme} surprise={surprise} />
 
       {/* 3. Wishes Scene */}
-      <Scene3Wishes wishes={surprise.wishes} />
+      <Scene3Wishes theme={theme} wishes={surprise.wishes} />
 
       {/* 4. Photo Memories Scene */}
-      <Scene4Photos surprise={surprise} />
+      <Scene4Photos theme={theme} surprise={surprise} />
 
       {/* 5. Letter Scene */}
-      <Scene5Letter surprise={surprise} />
+      <Scene5Letter theme={theme} surprise={surprise} />
 
       {/* 6. Finale Scene */}
-      <Scene6Finale surprise={surprise} />
+      <Scene6Finale theme={theme} surprise={surprise} />
     </div>
   );
 };
